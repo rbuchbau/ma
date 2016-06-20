@@ -1,0 +1,41 @@
+body { background-color: #111; }
+#video_box { position: relative; }
+#video { background-color: #000; }
+#controls { display: none; opacity: 1.0; color: #fff; position: absolute; height: 30px; }
+.control { float: left; height: 25px; width: 35px; margin-right: 5px; background-color: #000; text-align: center; -webkit-border-radius: 5px; -moz-border-radius: 5px; border-radius: 5px; }
+#progress { display: block; margin: 0 auto; width: 120px; float: left; position: relative; left: -50%;}
+#progress #play_time { float: right; margin: 5px 15px 15px 5px; font-size: 15px; line-height: 1; font-weight: normal; font-family: Helvetica, Arial, sans-serif;  }
+#wrap { float: left; position: relative; left: 50%; }
+#timeline #progress_box2 { float: left; width: 100px; height: 30px; border: 1px solid #666; background-color: #000000; margin: 70px 0 0 5px; overflow:hidden; -webkit-border-radius: 5px; -moz-border-radius: 5px; border-radius: 5px; }
+#timeline #play_progress2 { display: block; width: 0px; z-index: 0; height: 30px; background-color: #333; 
+  box-shadow: 
+    inset 0 8px 3px rgba(200,200,200,0.1),
+    inset 0 -10px 6px rgba(30,30,30,0.4);}
+#timeline #load_progress2 { display: block; width: 0px; z-index: 0; height: 30px; background-color: #777; }
+#controls2 { display: none; opacity: 1; color: #fff; position: absolute; height: 1px; }
+.control2 { float: left; height: 0px; width: 25px; margin-right: 5px; text-align: center;}
+.control2:first-child { margin-left: 5px; }
+#canvas {position: absolute; z-index: 1; width: 1853px; height: 30px; left: 10px; top: 71px;}
+#caffe_image { margin-bottom: 123px; margin-left: 200px;}
+#spanlink1 { position: absolute; margin-left: 50px; margin-top: 117px; max-width: 500px; visibility: hidden; overflow:hidden; text-overflow: clip;}
+#accuracy_span { position: absolute; margin-left: 600px; max-width: 150px; margin-top: 117px;}
+a { color: #CCC; ellipsis; white-space: nowrap; text-decoration: none; font-weight: bold; font-size: 18px; margin-right: 25px; line-height: 25px;}
+input[type=search] { width: 450px; margin-left: 129px; text-align: right; }
+
+
+.canv {
+    margin-top: 10%;
+    height: 100%;
+}
+
+.canvasDiv {
+    float:left;
+    width: 64px;
+    height: 174px;
+    margin-bottom: 40px;
+}
+
+.canvas {
+    border: 2px solid #CCC;
+    margin-top: -2px;
+}   

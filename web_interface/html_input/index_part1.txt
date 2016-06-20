@@ -1,0 +1,212 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+  "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <title>Video Retrieval Project - Jumpoffs</title>  
+  <script src="js/controls.js"></script>
+  <script src="js/jquery-2.2.0.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="css/style.css">
+</head>
+<body id="body" onload="bodyLoaded();">
+
+  <p>
+    <input type="search" id="mySearch" placeholder="Search for Caffe tag" onkeypress="handleEnter(event)">
+    <button onClick="button1()">Search</button>
+    <span id="searchInput" style="color:#66F"></span>
+    <span id="searchResult" style="color:white"></span>
+  </p>
+
+  <div id="video_box">
+    <video id="video" width="640" height="360">
+      <source src="videos/1.webm" type="video/mp4" controls></source>
+    </video>
+    <div id="controls">
+      <div id="wrap">
+      <div id="progress" class="control">
+        <div id="play_time">
+          <span id="current_time_display">00:00</span> / <span id="duration_display">00:00</span>
+        </div>
+      </div>
+      </div>
+    </div>
+    <canvas id="caffe_image" width="180" height="114"></canvas>
+    <span id="accuracy_span"></span>
+    <span id="spanlink1">
+      <span id="spanlink2"></span>
+    </span>
+  </div>
+
+  <div id="controls2">
+    <div id="timeline" class="control2">
+      <div id="progress_box2">
+        <span id="load_progress2"><span id="play_progress2"></span></span>
+        <canvas id="canvas" width="1853" ></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+
+    //the javascript code is messy
+
+    function loadXMLDoc(dname) {
+      if (window.XMLHttpRequest) { 
+        xhttp=new XMLHttpRequest();
+      }
+      xhttp.open("GET",dname,false);
+      xhttp.send("");
+      return xhttp;
+    }
+
+    var x11=loadXMLDoc("XML.xml");
+    var xml=x11.responseXML;
+    path1 = "/images/image";
+    m = "";
+    path2 = "/title";
+
+    var canvas = document.getElementById('canvas');
+    var video = document.getElementById('video');
+    ctx = canvas.getContext('2d');
+    width = 1853;
+    length = 904;
+    suffix = '.jpg';
+    var search = '';
+    var cav;
+
+    var imagesArray = [];
+
+    function button1() {
+      search = document.getElementById("mySearch").value;
+      search = search.toLowerCase();
+      searchTerm(search);
+    }
+
+    function searchTerm(search) {
+      search = search.trim();
+
+      var t1 = "[./tag/tagtag='";
+      var t2 = "']";
+      var t = t1 + search + t2;
+
+      var nodes=xml.evaluate(path1 + t + path2, xml, null, XPathResult.ANY_TYPE, null);
+      var result=nodes.iterateNext();
+      var text = '';
+      var s = '';
+
+      while (result) {
+        s = result.childNodes[0].nodeValue;
+        text = text + s + ' ';
+        imagesArray.push(Number(s));
+        imagesArray.push(s);
+        result=nodes.iterateNext();
+      }
+
+      ctx.clearRect(0,0, width, 300);
+
+      strokes(imagesArray);
+      hideShots(1);
+      
+    }
+
+    function hideShots(mode) {
+      for(var i = 0; i < all_scenes.length; i++) {
+        var element = all_scenes[i];
+        cav = document.getElementById("" + i);
+
+        if (cav != null) {
+          cav.style.opacity = "0.3"; 
+        }
+
+        if (mode == 1) {
+          if (jQuery.inArray(element, imagesArray) > -1) {
+            cav.style.opacity = "1.0";
+            imagesArray.shift();
+          }
+        } 
+      }
+
+      imagesArray = [];
+    }
+
+    function strokes(array) {
+      ctx.strokeStyle = '#CCC';
+      for (i = 0; i < array.length; i++) {
+        var pos = (array[i]/length) * width;   
+        ctx.beginPath();
+        ctx.moveTo(pos, 0);
+        ctx.lineTo(pos, 300);
+        ctx.stroke();
+      }
+    }
+
+    function handleEnter(event) {
+      if (event.which == 13 || event.keyCode == 13) {
+        button1();
+      }
+    }
+
+    function linkClick(y) {
+      var z = (document.getElementById("" + y)).innerHTML;
+      document.getElementById("mySearch").value = z;
+      var r = z.split(",");
+      searchTerm(r[0]);
+    }
+
+
+    function generateHref(idx) {
+      document.getElementById("mySearch").value = idx;
+      var myNode = document.getElementById("spanlink2");
+      while (myNode.firstChild) {
+          myNode.removeChild(myNode.firstChild);
+      }
+      var myNode2 = document.getElementById("accuracy_span");
+      while (myNode2.firstChild) {
+          myNode2.removeChild(myNode2.firstChild);
+      }
+
+      //var path = "/images/image[id='" + idx + "']/tag/tagtag";
+      var path = "/images/image[title='" + idx + "']/tag/title";
+      var nodes=xml.evaluate(path, xml, null, XPathResult.ANY_TYPE, null);
+      var result=nodes.iterateNext();
+      var s = '';
+
+      var m = 0;
+
+      var path2 = "/images/image[title='" + idx + "']/tag/accuracy";
+      var nodes2=xml.evaluate(path2, xml, null, XPathResult.ANY_TYPE, null);
+      var result2=nodes2.iterateNext();
+      var s2 = '';
+
+      while (result2) {
+        s2 = result2.childNodes[0].nodeValue;
+        result2=nodes2.iterateNext();
+        var link = document.createElement("a");
+        link.setAttribute('href', "#");
+        link.setAttribute('onclick', "linkClick('link" + m + "');");
+        link.setAttribute('style', "visibility: visible")
+        link.innerHTML = "" + s2;
+        document.getElementById("accuracy_span").appendChild(link);
+        var br = document.createElement("br")
+        document.getElementById("accuracy_span").appendChild(br);
+        m = m + 1;
+      }
+
+      m = 0;
+
+      while (result) {
+        s = result.childNodes[0].nodeValue;
+        var link = document.createElement("a");
+        link.setAttribute('href', "#");
+        link.setAttribute('id', "link" + m);
+        link.setAttribute('onclick', "linkClick('link" + m + "');");
+        link.setAttribute('style', "visibility: visible")
+        link.innerHTML = "" + s;
+        document.getElementById("spanlink2").appendChild(link);
+        var br = document.createElement("br")
+        document.getElementById("spanlink2").appendChild(br);
+        m = m + 1;
+        result=nodes.iterateNext();
+      }
+    }
+

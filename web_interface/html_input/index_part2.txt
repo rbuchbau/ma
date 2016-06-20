@@ -1,0 +1,145 @@
+    //----------------------------
+    //canvas and timeseek part
+    //----------------------------
+
+    var k = 0;      //the index of the next canvas
+
+    //canvas properties
+    var canvasW = 60;   
+    var canvasH = 34;
+    
+    //used for scrolling to know where the first line is
+    var margin = 0;     
+    var marginDiff = 1;
+    
+    //used for creation of html tags, canvases and getting the data
+    var canvasDiv;
+    var cav;
+    var context;
+    var imgData;
+    var img;
+    
+    var preloads = [];
+        
+    //when video duration is known, the canvas matrix can be created
+    video.addEventListener("loadedmetadata", function() {
+      createHiddenImages(1, "small_shots", "s");
+      createHiddenImages(2, "big_shots", "b");
+
+      // "frame" around all canvases
+      var canv = document.createElement("div");
+      canv.setAttribute("id", "canv");
+      canv.setAttribute("class", "canv");
+     
+     	var x = 0;
+      for(var i = 0; i < all_scenes.length; i++) {
+          if(i % 5 === 0) {
+              //each column of 5 canvases
+              canvasDiv = document.createElement("div");
+              canvasDiv.setAttribute("class", "canvasDiv");
+          }
+      
+          createCanvas(canvasDiv, i);
+      
+          if(i % 5 === 4) {
+              canv.appendChild(canvasDiv);
+              x = 0;
+          }
+          x++;
+      }
+
+      for(var i = 1; i < x; i++) {      
+      	if (i === 1) {
+          canvasDiv = document.createElement("div");
+          canvasDiv.setAttribute("class", "canvasDiv");        		
+      	}  
+        createCanvas(canvasDiv, all_scenes.length - x + i);
+      }
+        
+      canv.appendChild(canvasDiv);
+      document.body.appendChild(canv);
+
+      drawImages();
+        
+    }, false);
+
+
+    function createHiddenImages(hIidx, folder, x) {
+      hiddenImages = document.createElement("div");
+      hiddenImages.setAttribute("class", "hiddenImages" + hIidx);
+
+      function preload(arrayOfImages) {
+        $(arrayOfImages).each(function(){
+            $('<img/>')[0].src = this;
+        });
+      }
+
+      for(var i = 0; i < all_scenes.length; i++) {
+          preloads.push("shot_images/" + folder + "/" + all_scenes[i] + ".jpg");
+      }
+
+      preload(preloads);
+
+      for(var i = 0; i < all_scenes.length; i++) {
+        var image = document.createElement("img");
+        image.setAttribute("id", "img" + x + all_scenes[i]);
+        image.setAttribute("src", "shot_images/" + folder + "/" + all_scenes[i] + ".jpg");
+        image.setAttribute("width", canvasW);
+        image.setAttribute("height", canvasH);
+        image.setAttribute("hidden", true);
+
+        hiddenImages.appendChild(image);
+      }
+
+      document.body.appendChild(hiddenImages);
+
+    }
+
+
+    //creates a canvas and sets some attributes (width, height, onclick, ...)
+    function createCanvas(canvasDiv, i) {
+        var canvas = document.createElement("canvas");
+        //the id is used for knowing the time at which the new video starts
+        canvas.setAttribute("id", i);
+        canvas.setAttribute("class", "canvas");
+        canvas.width = canvasW;
+        canvas.height = canvasH;
+        canvas.addEventListener("mousedown", doClick, false);
+
+        canvasDiv.appendChild(canvas);
+    }
+
+    function drawImages() {
+      for(var i = 0; i < all_scenes.length; i++) {
+        var element = all_scenes[i];
+        cav = document.getElementById("" + i);
+        context = cav.getContext("2d");
+        img = document.getElementById("imgs" + element);
+        cav.style.opacity = "0.3";
+        
+        //drawing to canvas
+        context.drawImage(img, 0, 0, 60, 34);
+      }
+    }
+        
+    var imgData;
+    //click on a canvas plays the video from that point
+    function doClick(e) {
+        var idx = e.target.getAttribute("id");
+        var time = all_scenes[idx]*2;
+        video.currentTime = time;
+        scroll(0,0);
+        
+        cav = document.getElementById("caffe_image");
+        context = cav.getContext("2d");
+
+        img = document.getElementById("imgb" + all_scenes[idx]);
+        //drawing to canvas
+        context.drawImage(img, 0, 0, 180, 114);
+
+        generateHref(Number(idx)+1);
+    }
+
+  </script>
+</body>
+</html>
