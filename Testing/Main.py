@@ -3,6 +3,8 @@
 
 import numpy as np
 import sys
+caffe_root = '../../../caffe/'
+sys.path.insert(0, caffe_root + 'python')
 import caffe
 
 def main():
