@@ -5,6 +5,7 @@ import numpy as np
 import sys
 caffe_root = '../../../caffe/'
 sys.path.insert(0, caffe_root + 'python')
+sys.path.append('/home/zexe/caffe/python')
 import caffe
 import matplotlib.pyplot as plt
 import os
@@ -17,7 +18,6 @@ def main():
     plt.rcParams['image.interpolation'] = 'nearest'  # don't interpolate: show square pixels
     plt.rcParams['image.cmap'] = 'gray'  # use grayscale output rather than a (potentially misleading) color heatmap
 
-
     model_def = caffe_root + 'new2/models/alexnet_p_c_3/deploy.prototxt'
     model_weights = caffe_root + 'new2/models/alexnet_p_c_3/alexnet_p_c_3.caffemodel'
 
@@ -29,7 +29,7 @@ def main():
     blob.ParseFromString(data)
     arr = np.array( caffe.io.blobproto_to_array(blob) )
     out = arr[0]
-    np.save( 'new2/models/alexnet_p_c_3/mean.npy' , out )
+    np.save( caffe_root + 'new2/models/alexnet_p_c_3/mean.npy' , out )
 
     # load the mean ImageNet image (as distributed with Caffe) for subtraction
     mu = np.load(caffe_root + 'new2/models/alexnet_p_c_3/mean.npy')  # average over pixels to obtain the mean (BGR) pixel values
@@ -48,9 +48,10 @@ def main():
                           3,         # 3-channel (BGR) images
                           227, 227)  # image size is 227x227
 
-    image = caffe.io.load_image(caffe_root + '../disk1/Downloads/ffmpeg_video/1secs/1.jpg')
+    image = caffe.io.load_image(caffe_root + '../disk1/Downloads/ffmpeg_video/2secs/1.jpg')
     transformed_image = transformer.preprocess('data', image)
     plt.imshow(image)
+    plt.show()
 
 
     # copy the image data into the memory allocated for the net
