@@ -7,6 +7,7 @@ caffe_root = '../../../caffe/'
 sys.path.insert(0, caffe_root + 'python')
 import caffe
 import matplotlib.pyplot as plt
+import os
 
 
 def main():
@@ -50,6 +51,19 @@ def main():
     image = caffe.io.load_image(caffe_root + '../disk1/Downloads/ffmpeg_video/1secs/1.jpg')
     transformed_image = transformer.preprocess('data', image)
     plt.imshow(image)
+
+
+    # copy the image data into the memory allocated for the net
+    net.blobs['data'].data[...] = transformed_image
+
+    ### perform classification
+    output = net.forward()
+    output_prob = output['prob'][0]  # the output probability vector for the first image in the batch
+    print 'predicted class is:', output_prob.argmax()
+    # load ImageNet labels
+    labels_file = caffe_root + 'new2/models/alexnet_p_c_3/synset_words.txt'
+    labels = np.loadtxt(labels_file, str, delimiter='\t')
+    print 'output label:', labels[output_prob.argmax()]
 
 
 if __name__ == '__main__':
