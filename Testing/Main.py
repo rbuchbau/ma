@@ -6,8 +6,50 @@ import sys
 caffe_root = '../../../caffe/'
 sys.path.insert(0, caffe_root + 'python')
 import caffe
+import matplotlib.pyplot as plt
+
 
 def main():
+
+    # set display defaults
+    plt.rcParams['figure.figsize'] = (10, 10)        # large images
+    plt.rcParams['image.interpolation'] = 'nearest'  # don't interpolate: show square pixels
+    plt.rcParams['image.cmap'] = 'gray'  # use grayscale output rather than a (potentially misleading) color heatmap
+
+
+    model_def = caffe_root + 'new2/models/alexnet_p_c_3/deploy.prototxt'
+    model_weights = caffe_root + 'new2/models/alexnet_p_c_3/alexnet_p_c_3.caffemodel'
+
+    net = caffe.Net(model_def, model_weights, caffe.TEST)
+
+    #convert .binaryproto to .npy
+    blob = caffe.proto.caffe_pb2.BlobProto()
+    data = open( caffe_root + 'new2/models/alexnet_p_c_3/mean.binaryproto', 'rb' ).read()
+    blob.ParseFromString(data)
+    arr = np.array( caffe.io.blobproto_to_array(blob) )
+    out = arr[0]
+    np.save( 'new2/models/alexnet_p_c_3/mean.npy' , out )
+
+    # load the mean ImageNet image (as distributed with Caffe) for subtraction
+    mu = np.load(caffe_root + 'new2/models/alexnet_p_c_3/mean.npy')  # average over pixels to obtain the mean (BGR) pixel values
+    mu = mu.mean(1).mean(1)
+
+    # create transformer for the input called 'data'
+    transformer = caffe.io.Transformer({'data': net.blobs['data'].data.shape})
+    transformer.set_transpose('data', (2,0,1))  # move image channels to outermost dimension
+    transformer.set_mean('data', mu)            # subtract the dataset-mean value in each channel
+    transformer.set_raw_scale('data', 255)      # rescale from [0, 1] to [0, 255]
+    transformer.set_channel_swap('data', (2,1,0))  # swap channels from RGB to BGR
+
+    # set the size of the input (we can skip this if we're happy
+    #  with the default; we can also change it later, e.g., for different batch sizes)
+    net.blobs['data'].reshape(50,        # batch size
+                          3,         # 3-channel (BGR) images
+                          227, 227)  # image size is 227x227
+
+    image = caffe.io.load_image(caffe_root + '../disk1/Downloads/ffmpeg_video/1secs/1.jpg')
+    transformed_image = transformer.preprocess('data', image)
+    plt.imshow(image)
 
 
 if __name__ == '__main__':
