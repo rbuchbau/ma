@@ -24,12 +24,12 @@ def main():
     net = caffe.Net(model_def, model_weights, caffe.TEST)
 
     #convert .binaryproto to .npy
-    blob = caffe.proto.caffe_pb2.BlobProto()
-    data = open( caffe_root + 'new2/models/alexnet_p_c_3/mean.binaryproto', 'rb' ).read()
-    blob.ParseFromString(data)
-    arr = np.array( caffe.io.blobproto_to_array(blob) )
-    out = arr[0]
-    np.save( caffe_root + 'new2/models/alexnet_p_c_3/mean.npy' , out )
+    # blob = caffe.proto.caffe_pb2.BlobProto()
+    # data = open( caffe_root + 'new2/models/alexnet_p_c_3/mean.binaryproto', 'rb' ).read()
+    # blob.ParseFromString(data)
+    # arr = np.array( caffe.io.blobproto_to_array(blob) )
+    # out = arr[0]
+    # np.save( caffe_root + 'new2/models/alexnet_p_c_3/mean.npy' , out )
 
     # load the mean ImageNet image (as distributed with Caffe) for subtraction
     mu = np.load(caffe_root + 'new2/models/alexnet_p_c_3/mean.npy')  # average over pixels to obtain the mean (BGR) pixel values
@@ -58,13 +58,22 @@ def main():
     net.blobs['data'].data[...] = transformed_image
 
     ### perform classification
+    caffe.set_device(0)
+    caffe.set_mode_gpu()
     output = net.forward()
+
     output_prob = output['prob'][0]  # the output probability vector for the first image in the batch
     print 'predicted class is:', output_prob.argmax()
     # load ImageNet labels
     labels_file = caffe_root + 'new2/models/alexnet_p_c_3/synset_words.txt'
     labels = np.loadtxt(labels_file, str, delimiter='\t')
     print 'output label:', labels[output_prob.argmax()]
+
+
+    feat = net.blobs['fc7'].data[0]
+    feat = feat.flat
+
+    plt.plot(feat)
 
 
 if __name__ == '__main__':
