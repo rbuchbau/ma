@@ -48,8 +48,12 @@ def main():
                           3,         # 3-channel (BGR) images
                           227, 227)  # image size is 227x227
 
-    image = caffe.io.load_image(caffe_root + '../disk1/Downloads/ffmpeg_video/2secs/1.jpg')
-    transformed_image = transformer.preprocess('data', image)
+    all_images = []
+
+    for i in range(0,100):
+        image = caffe.io.load_image(caffe_root + '../disk1/Downloads/ffmpeg_video/2secs/' + str(i) + '.jpg')
+        transformed_image = transformer.preprocess('data', image)
+        all_images.append(transformed_image)
     #plt.imshow(image)
     #plt.show()
 
@@ -61,7 +65,7 @@ def main():
     caffe.set_device(0)
     caffe.set_mode_gpu()
 
-    for i in range(0, 100):
+    for i in range(0, len(all_images)):
         output = net.forward()
 
         output_prob = output['prob'][0]  # the output probability vector for the first image in the batch
