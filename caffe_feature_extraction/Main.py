@@ -14,22 +14,22 @@ import os
 
 def main():
     model = 'alexnet_p_c_3'
-    duration = '2secs'
-    extract_features('fv_alexnet_p_c_3_2secs.csv')
+    duration = '2secs/'
+    extract_features('fv_' + model + '_' + duration + '.csv', model, duration)
 
 
 if __name__ == '__main__':
     main()
 
 
-def extract_features(filename):
+def extract_features(filename, model, duration):
     # set display defaults
     plt.rcparams['figure.figsize'] = (10, 10)  # large images
     plt.rcparams['image.interpolation'] = 'nearest'  # don't interpolate: show square pixels
     plt.rcparams['image.cmap'] = 'gray'  # use grayscale output rather than a (potentially misleading) color heatmap
 
-    model_def = caffe_root + 'new2/models/alexnet_p_c_3/deploy.prototxt'
-    model_weights = caffe_root + 'new2/models/alexnet_p_c_3/alexnet_p_c_3.caffemodel'
+    model_def = caffe_root + 'new2/models/' + model + '/deploy.prototxt'
+    model_weights = caffe_root + 'new2/models/' + model + '/' + model + '.caffemodel'
 
     net = caffe.Net(model_def, model_weights, caffe.TEST)
 
@@ -43,7 +43,7 @@ def extract_features(filename):
 
     # load the mean ImageNet image (as distributed with Caffe) for subtraction
     mu = np.load(
-        caffe_root + 'new2/models/alexnet_p_c_3/mean.npy')  # average over pixels to obtain the mean (BGR) pixel values
+        caffe_root + 'new2/models/' + model + '/mean.npy')  # average over pixels to obtain the mean (BGR) pixel values
     mu = mu.mean(1).mean(1)
 
     # create transformer for the input called 'data'
@@ -62,14 +62,13 @@ def extract_features(filename):
     all_images = []
 
     # get number of files in directory
-    duration = '2secs/'
     path = ffmpeg_root + duration
     num_files = len([f for f in os.listdir(path)
                      if os.path.isfile(os.path.join(path, f))]) - 1
 
     # load and preprocess all image files
     for i in range(1, num_files):
-        image = caffe.io.load_image(ffmpeg_root + '2secs/' + str(i) + '.jpg')
+        image = caffe.io.load_image(ffmpeg_root + duration + str(i) + '.jpg')
         transformed_image = transformer.preprocess('data', image)
         all_images.append(transformed_image)
     # plt.imshow(image)
