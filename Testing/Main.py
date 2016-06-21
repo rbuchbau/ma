@@ -50,47 +50,43 @@ def main():
 
     all_images = []
 
-
-    #get number of files in directory
-    duration = '2secs/'
-    path = '../../../disk1/Downloads/ffmpeg_video/' + duration
-    num_files = len([f for f in os.listdir(path)
-                if os.path.isfile(os.path.join(path, f))])
-
-
-    for i in range(0,100):
-        image = caffe.io.load_image(caffe_root + '../disk1/Downloads/ffmpeg_video/' + duration + str(i) + '.jpg')
+    for i in range(1,100):
+        image = caffe.io.load_image(caffe_root + '../disk1/Downloads/ffmpeg_video/2secs/' + str(i) + '.jpg')
         transformed_image = transformer.preprocess('data', image)
         all_images.append(transformed_image)
     #plt.imshow(image)
     #plt.show()
 
 
-    # copy the image data into the memory allocated for the net
 
     ### perform classification
     caffe.set_device(0)
     caffe.set_mode_gpu()
 
-    for i in range(0, len(all_images)):
-        net.blobs['data'].data[...] = transformed_image
+    feat_vectors = []
+
+    for i, img in enumerate(all_images):
+        # copy the image data into the memory allocated for the net
+        net.blobs['data'].data[...] = img
+
         output = net.forward()
 
         output_prob = output['prob'][0]  # the output probability vector for the first image in the batch
-        print 'predicted class is:', output_prob.argmax()
+        print 'predicted class for ' + str(i+1) + '.jpg is:', output_prob.argmax()
         # load ImageNet labels
         labels_file = caffe_root + 'new2/models/alexnet_p_c_3/synset_words.txt'
         labels = np.loadtxt(labels_file, str, delimiter='\t')
         print 'output label:', labels[output_prob.argmax()]
 
+        feat = net.blobs['fc7'].data[0]
+        feat = feat.flat
+        feat_vectors.append(feat)
 
-    feat = net.blobs['fc7'].data[0]
-    feat = feat.flat
 
-    print "Plotting."
-    plt.plot(feat)
-    # plt.show()
-    print feat[0]
+    # print "Plotting."
+    # plt.plot(feat)
+    # # plt.show()
+    # print feat[0]
 
 
 if __name__ == '__main__':
