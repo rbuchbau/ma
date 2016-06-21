@@ -57,7 +57,7 @@ def main():
     #plt.imshow(image)
     #plt.show()
 
-
+#
 
     ### perform classification
     caffe.set_device(0)
