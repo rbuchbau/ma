@@ -60,14 +60,16 @@ def main():
     ### perform classification
     caffe.set_device(0)
     caffe.set_mode_gpu()
-    output = net.forward()
 
-    output_prob = output['prob'][0]  # the output probability vector for the first image in the batch
-    print 'predicted class is:', output_prob.argmax()
-    # load ImageNet labels
-    labels_file = caffe_root + 'new2/models/alexnet_p_c_3/synset_words.txt'
-    labels = np.loadtxt(labels_file, str, delimiter='\t')
-    print 'output label:', labels[output_prob.argmax()]
+    for i in range(0, 100):
+        output = net.forward()
+
+        output_prob = output['prob'][0]  # the output probability vector for the first image in the batch
+        print 'predicted class is:', output_prob.argmax()
+        # load ImageNet labels
+        labels_file = caffe_root + 'new2/models/alexnet_p_c_3/synset_words.txt'
+        labels = np.loadtxt(labels_file, str, delimiter='\t')
+        print 'output label:', labels[output_prob.argmax()]
 
 
     feat = net.blobs['fc7'].data[0]
@@ -75,6 +77,7 @@ def main():
 
     print "Plotting."
     plt.plot(feat)
+    # plt.show()
     print feat[0]
 
 
