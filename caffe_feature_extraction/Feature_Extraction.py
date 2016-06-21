@@ -21,12 +21,12 @@ def extract_features(filename, model, duration):
     net = caffe.Net(model_def, model_weights, caffe.TEST)
 
     # convert .binaryproto to .npy
-    # blob = caffe.proto.caffe_pb2.BlobProto()
-    # data = open( caffe_root + 'new2/models/alexnet_p_c_3/mean.binaryproto', 'rb' ).read()
-    # blob.ParseFromString(data)
-    # arr = np.array( caffe.io.blobproto_to_array(blob) )
-    # out = arr[0]
-    # np.save( caffe_root + 'new2/models/alexnet_p_c_3/mean.npy' , out )
+    blob = caffe.proto.caffe_pb2.BlobProto()
+    data = open( caffe_root + 'new2/models/' + model + '/mean.binaryproto', 'rb' ).read()
+    blob.ParseFromString(data)
+    arr = np.array( caffe.io.blobproto_to_array(blob) )
+    out = arr[0]
+    np.save( caffe_root + 'new2/models/' + model + '/mean.npy' , out )
 
     # load the mean ImageNet image (as distributed with Caffe) for subtraction
     mu = np.load(
@@ -62,7 +62,7 @@ def extract_features(filename, model, duration):
     # plt.show()
 
     ### perform classification
-    print "Classify."
+    print "Classifying."
     caffe.set_device(0)
     caffe.set_mode_gpu()
 

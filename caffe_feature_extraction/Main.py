@@ -5,7 +5,7 @@ import Feature_Extraction as fe
 
 
 def main():
-    model = 'alexnet_p_c_3'
+    model = 'alexnet_p_3'
     duration = '2secs'
     fe.extract_features('fv_' + model + '_' + duration + '.csv', model, duration)
 
