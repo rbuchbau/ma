@@ -1,8 +1,19 @@
+
+import numpy as np
+import sys
+caffe_root = '/home/zexe/caffe/'
+ffmpeg_root ='/home/zexe/disk1/Downloads/ffmpeg_video/'
+sys.path.insert(0, caffe_root + 'python')
+sys.path.append('/home/zexe/caffe/python')
+import caffe
+import matplotlib.pyplot as plt
+import os
+
 def extract_features(filename, model, duration):
     # set display defaults
-    plt.rcparams['figure.figsize'] = (10, 10)  # large images
-    plt.rcparams['image.interpolation'] = 'nearest'  # don't interpolate: show square pixels
-    plt.rcparams['image.cmap'] = 'gray'  # use grayscale output rather than a (potentially misleading) color heatmap
+    # plt.rcparams['figure.figsize'] = (10, 10)  # large images
+    # plt.rcparams['image.interpolation'] = 'nearest'  # don't interpolate: show square pixels
+    # plt.rcparams['image.cmap'] = 'gray'  # use grayscale output rather than a (potentially misleading) color heatmap
 
     model_def = caffe_root + 'new2/models/' + model + '/deploy.prototxt'
     model_weights = caffe_root + 'new2/models/' + model + '/' + model + '.caffemodel'
@@ -38,19 +49,20 @@ def extract_features(filename, model, duration):
     all_images = []
 
     # get number of files in directory
-    path = ffmpeg_root + duration
+    path = ffmpeg_root + duration + '/'
     num_files = len([f for f in os.listdir(path)
                      if os.path.isfile(os.path.join(path, f))]) - 1
 
     # load and preprocess all image files
     for i in range(1, num_files):
-        image = caffe.io.load_image(ffmpeg_root + duration + str(i) + '.jpg')
+        image = caffe.io.load_image(ffmpeg_root + duration + '/' + str(i) + '.jpg')
         transformed_image = transformer.preprocess('data', image)
         all_images.append(transformed_image)
     # plt.imshow(image)
     # plt.show()
 
     ### perform classification
+    print "Classify."
     caffe.set_device(0)
     caffe.set_mode_gpu()
 
@@ -74,7 +86,7 @@ def extract_features(filename, model, duration):
         feat = feat.flat
         feat_vectors.append(feat[:])
 
-    print str(len(feat_vectors))
+    print "Writing to file."
     with open('feature_vectors/' + filename, 'w') as f:
         for i in range(0, len(feat_vectors)):
             for j in range(0, len(feat_vectors[i]) - 1):
