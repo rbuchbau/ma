@@ -50,7 +50,13 @@ def main():
 
     all_images = []
 
-    for i in range(1,100):
+    #get number of files in directory
+    duration = '2secs/'
+    path = '../../../disk1/Downloads/ffmpeg_video/' + duration
+    num_files = len([f for f in os.listdir(path)
+    if os.path.isfile(os.path.join(path, f))])
+
+    for i in range(1,num_files):
         image = caffe.io.load_image(caffe_root + '../disk1/Downloads/ffmpeg_video/2secs/' + str(i) + '.jpg')
         transformed_image = transformer.preprocess('data', image)
         all_images.append(transformed_image)
