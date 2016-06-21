@@ -44,14 +44,14 @@ def main():
 
     # set the size of the input (we can skip this if we're happy
     #  with the default; we can also change it later, e.g., for different batch sizes)
-    net.blobs['data'].reshape(50,        # batch size
+    net.blobs['data'].reshape(1,        # batch size
                           3,         # 3-channel (BGR) images
                           227, 227)  # image size is 227x227
 
     image = caffe.io.load_image(caffe_root + '../disk1/Downloads/ffmpeg_video/2secs/1.jpg')
     transformed_image = transformer.preprocess('data', image)
-    plt.imshow(image)
-    plt.show()
+    #plt.imshow(image)
+    #plt.show()
 
 
     # copy the image data into the memory allocated for the net
@@ -73,7 +73,9 @@ def main():
     feat = net.blobs['fc7'].data[0]
     feat = feat.flat
 
+    print "Plotting."
     plt.plot(feat)
+    print feat[0]
 
 
 if __name__ == '__main__':
