@@ -50,8 +50,16 @@ def main():
 
     all_images = []
 
+
+    #get number of files in directory
+    duration = '2secs/'
+    path = '../../../disk1/Downloads/ffmpeg_video/' + duration
+    num_files = len([f for f in os.listdir(path)
+                if os.path.isfile(os.path.join(path, f))])
+
+
     for i in range(0,100):
-        image = caffe.io.load_image(caffe_root + '../disk1/Downloads/ffmpeg_video/2secs/' + str(i) + '.jpg')
+        image = caffe.io.load_image(caffe_root + '../disk1/Downloads/ffmpeg_video/' + duration + str(i) + '.jpg')
         transformed_image = transformer.preprocess('data', image)
         all_images.append(transformed_image)
     #plt.imshow(image)
@@ -59,13 +67,13 @@ def main():
 
 
     # copy the image data into the memory allocated for the net
-    net.blobs['data'].data[...] = transformed_image
 
     ### perform classification
     caffe.set_device(0)
     caffe.set_mode_gpu()
 
     for i in range(0, len(all_images)):
+        net.blobs['data'].data[...] = transformed_image
         output = net.forward()
 
         output_prob = output['prob'][0]  # the output probability vector for the first image in the batch
