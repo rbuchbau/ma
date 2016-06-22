@@ -46,6 +46,8 @@ def extract_features(filename, model, duration):
                               3,  # 3-channel (BGR) images
                               227, 227)  # image size is 227x227
 
+
+    print "Preparing images."
     all_images = []
 
     # get number of files in directory
@@ -87,20 +89,13 @@ def extract_features(filename, model, duration):
         feat_vectors.append(feat[:])
 
     print "Writing to file."
-    with open('feature_vectors/' + filename, 'w') as f:
-        for i in range(0, len(feat_vectors)):
-            for j in range(0, len(feat_vectors[i]) - 1):
-                value = feat_vectors[i][j]
-                if abs(value) < 0.01:
-                    value = 0
-                value = format(value, '.4f')
-                f.write(str(value) + ',')
+    np.savetxt('feature_vectors/' + filename, feat_vectors, delimiter=',', fmt='%4.4f')
 
-            f.write(str(value) + '\n')
+    txt = np.genfromtxt('feature_vectors/' + filename,  dtype='float32', delimiter=',')
 
-        f.close()
+    print "a"
 
 
-        # print "Plotting."
-        # plt.plot(feat)
-        # # plt.show()
+    # print "Plotting."
+    # plt.plot(feat)
+    # # plt.show()
