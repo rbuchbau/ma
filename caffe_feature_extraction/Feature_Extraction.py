@@ -1,6 +1,7 @@
 
 import numpy as np
 import sys
+import FileIO
 caffe_root = '/home/zexe/caffe/'
 ffmpeg_root ='/home/zexe/disk1/Downloads/ffmpeg_video/'
 sys.path.insert(0, caffe_root + 'python')
@@ -49,19 +50,30 @@ def extract_features(filename, model, duration):
 
     print "Preparing images."
     all_images = []
+    labels = []
+    file_paths = []
 
-    # get number of files in directory
-    path = ffmpeg_root + duration + '/'
-    num_files = len([f for f in os.listdir(path)
-                     if os.path.isfile(os.path.join(path, f))]) - 1
+    if (mode == 1):
+        # get number of files in directory
+        path = ffmpeg_root + duration + '/'
+        num_files = len([f for f in os.listdir(path)
+                         if os.path.isfile(os.path.join(path, f))]) - 1
 
-    # load and preprocess all image files
-    for i in range(1, num_files):
-        image = caffe.io.load_image(ffmpeg_root + duration + '/' + str(i) + '.jpg')
-        transformed_image = transformer.preprocess('data', image)
-        all_images.append(transformed_image)
-    # plt.imshow(image)
-    # plt.show()
+        # load and preprocess all image files
+        for i in range(1, num_files):
+            image = caffe.io.load_image(ffmpeg_root + duration + '/' + str(i) + '.jpg')
+            transformed_image = transformer.preprocess('data', image)
+            all_images.append(transformed_image)
+        # plt.imshow(image)
+        # plt.show()
+    elif (mode == 2):
+        #read text file with labels
+        data = FileIO.read_groundtruth('val.txt')   #returns list of tupels (file_path, label)
+        for fp, label in data:
+            file_paths.append(fp)
+            labels.append(label)
+
+        print str(len(file_paths))
 
     ### perform classification
     print "Classifying."
