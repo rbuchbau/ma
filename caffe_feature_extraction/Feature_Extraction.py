@@ -10,7 +10,7 @@ import caffe
 import matplotlib.pyplot as plt
 import os
 
-def extract_features(filename, model, duration):
+def extract_features(filename, model, duration, mode):
     # set display defaults
     # plt.rcparams['figure.figsize'] = (10, 10)  # large images
     # plt.rcparams['image.interpolation'] = 'nearest'  # don't interpolate: show square pixels
@@ -73,7 +73,16 @@ def extract_features(filename, model, duration):
             file_paths.append(fp)
             labels.append(label)
 
-        print str(len(file_paths))
+        for i, fp in enumerate(file_paths):
+            image = caffe.io.load_image('/home/zexe/disk1/Downloads/original_data/' + fp)
+            transformed_image = transformer.preprocess('data', image)
+            all_images.append(transformed_image)
+
+            if i % 10000 == 0:
+                print str(i)
+
+        print str(len(all_images))
+
 
     ### perform classification
     print "Classifying."
