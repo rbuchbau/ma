@@ -2,6 +2,8 @@
 import numpy as np
 import sys
 import FileIO
+from sklearn import svm
+from sklearn.externals import joblib
 caffe_root = '/home/zexe/caffe/'
 ffmpeg_root ='/home/zexe/disk1/Downloads/ffmpeg_video/'
 sys.path.insert(0, caffe_root + 'python')
@@ -53,7 +55,7 @@ def extract_features(filename, model, duration, mode):
     labels = []
     file_paths = []
 
-    if (mode == 1):
+    if mode == 1:
         # get number of files in directory
         path = ffmpeg_root + duration + '/'
         num_files = len([f for f in os.listdir(path)
@@ -66,7 +68,7 @@ def extract_features(filename, model, duration, mode):
             all_images.append(transformed_image)
         # plt.imshow(image)
         # plt.show()
-    elif (mode == 2):
+    elif mode == 2:
         #read text file with labels
         data = FileIO.read_groundtruth('val.txt')   #returns list of tupels (file_path, label)
         for fp, label in data:
@@ -109,10 +111,35 @@ def extract_features(filename, model, duration, mode):
         feat = feat.flat
         feat_vectors.append(feat[:])
 
-    print "Writing to file."
-    np.savetxt('feature_vectors/' + filename, feat_vectors, delimiter=',', fmt='%4.4f')
 
-    txt = np.genfromtxt('feature_vectors/' + filename,  dtype='float32', delimiter=',')
+    if mode == 2:
+        print "Training SVM"
+        #################
+        # SVM code
+        #################
+
+        #prepare data
+        X_train = feat_vectors
+        y_train = np.array(labels)
+
+        std_scaler = StandardScaler()
+        X_train_scaled = std_scaler.fit_transform(X_train)
+
+        #create classifier
+        clf = svm.SV(kernel='rbf', max_iter=1000, tol=1e-6)
+
+        #train svm
+        svm.fit(X_train_scaled, y_train)
+
+        #save svm to file
+        joblib.dump(clf, 'svm.pkl')
+
+
+
+    print "Writing to file."
+    # np.savetxt('feature_vectors/' + filename, feat_vectors, delimiter=',', fmt='%4.4f')
+
+    # txt = np.genfromtxt('feature_vectors/' + filename,  dtype='float32', delimiter=',')
 
     print "a"
 
