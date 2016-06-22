@@ -12,7 +12,7 @@ import caffe
 import matplotlib.pyplot as plt
 import os
 
-def extract_features(filename, model, duration, mode):
+def extract_features(filename, model, duration, feature, mode):
     # set display defaults
     # plt.rcparams['figure.figsize'] = (10, 10)  # large images
     # plt.rcparams['image.interpolation'] = 'nearest'  # don't interpolate: show square pixels
@@ -105,7 +105,7 @@ def extract_features(filename, model, duration, mode):
         # print 'output label:', labels[output_prob.argmax()]
 
         # get features of one layer
-        feat = net.blobs['fc7'].data[0]
+        feat = net.blobs[feature].data[0]
         feat = feat.flat
         feat_vectors.append(feat[:])
 
