@@ -130,14 +130,14 @@ def extract_features(filename, model, duration, feature, mode):
         svm.fit(X_train_scaled, y_train)
 
         #save svm to file
-        joblib.dump(clf, 'svm.pkl')
+        joblib.dump(clf, 'svms/svm_' + filename + '.pkl')
 
 
 
     print "Writing to file."
-    # np.savetxt('feature_vectors/' + filename, feat_vectors, delimiter=',', fmt='%4.4f')
+    # np.savetxt('feature_vectors/fv_' + filename + '.csv', feat_vectors, delimiter=',', fmt='%4.4f')
 
-    # txt = np.genfromtxt('feature_vectors/' + filename,  dtype='float32', delimiter=',')
+    # txt = np.genfromtxt('feature_vectors/fv_' + filename + '.csv',  dtype='float32', delimiter=',')
 
     print "a"
 

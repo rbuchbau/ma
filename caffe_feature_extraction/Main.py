@@ -8,7 +8,7 @@ def main():
     model = 'alexnet_p_c_3'
     duration = '2secs'
     feature = 'fc7'
-    fe.extract_features('fv_' + model + '_' + duration + '_' + feature + '.csv',
+    fe.extract_features(model + '_' + duration + '_' + feature,
                         model, duration, feature, 2)
 
 
