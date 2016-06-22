@@ -81,9 +81,7 @@ def extract_features(filename, model, duration, mode):
             all_images.append(transformed_image)
 
             if i % 10000 == 0:
-                print str(i)
-
-        print str(len(all_images))
+                print "Read str(i) images."
 
 
     ### perform classification
