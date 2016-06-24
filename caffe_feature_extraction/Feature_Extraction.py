@@ -80,6 +80,7 @@ def load_and_use_svm(filename, svm_path, model, duration, feature):
     # feat_vectors = classify(net, feature, all_images)
 
     #load feature vectors from file
+    print "Load feature vectors."
     feat_vectors = np.genfromtxt('feature_vectors/fv_' + filename + '.csv',  dtype='float32', delimiter=',')
 
     #load svm from file
@@ -87,7 +88,6 @@ def load_and_use_svm(filename, svm_path, model, duration, feature):
 
     #prepare data for svm training
     X_test = np.array(feat_vectors)
-
     std_scaler = StandardScaler()
     X_test_scaled = std_scaler.fit_transform(X_test)
 
@@ -95,6 +95,12 @@ def load_and_use_svm(filename, svm_path, model, duration, feature):
     print "Start predicting."
     predicted_labels = svm.predict(X_test_scaled)
     print "a"
+
+    labels = get_labels()
+
+    for i,label in enumerate(predicted_labels):
+        if label in labels:
+            print str(i)
 
 
 def init_caffe_net(model):
@@ -213,10 +219,12 @@ def load_images_to_classify(transformer, duration):
 
 
 def get_labels(filename='synset_words.txt'):
-    data = FileIO.read_groundtruth(filename)
-    new_data = []
+    data = FileIO.read_synset_words(filename)
 
-    for i,(a,b) in enumerate(data):
-        new_data.append( (i,b) )
+    labels = []
 
-    print "a"
+    for i,cls in data:
+        if cls == 'sport' or cls == 'water sport':
+            labels.append(i)
+
+    return labels
