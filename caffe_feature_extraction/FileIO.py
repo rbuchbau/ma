@@ -20,6 +20,6 @@ def read_synset_words(filename):
             for j,string in enumerate(line):
                 if j > 1:
                     str += ' ' + string
-            data.append( (i, str) )
+            data.append(str)
         f.close()
     return data
