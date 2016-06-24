@@ -36,7 +36,7 @@ def extract_features(filename, model, duration, feature):
     # # plt.show()
 
 
-def train_and_save_svm(svm_path, model, feature):
+def train_and_save_svm(svm_path, model, feature, kernel):
     #init caffe net
     net, transformer = init_caffe_net(model)
 
@@ -59,7 +59,7 @@ def train_and_save_svm(svm_path, model, feature):
     X_train_scaled = std_scaler.fit_transform(X_train)
 
     #create classifier
-    clf = SVC(kernel='rbf', max_iter=1000, tol=1e-6)
+    clf = SVC(kernel=kernel, max_iter=1000, tol=1e-6)
 
     #train svm
     clf.fit(X_train_scaled, y_train)
