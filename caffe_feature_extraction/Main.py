@@ -8,15 +8,16 @@ def main():
     model = 'alexnet_p_c_3'
     duration = '2secs'
     feature = 'fc7'
+    kernel = 'rbf'
     filename = '' + model + '_' + duration + '_' + feature
 
     # Fe.convert_binaryproto_to_npy(model)
 
     # Fe.extract_features(filename, model, duration, feature)
 
-    svm_path = 'svms/svm_linear_' + filename + '/' + filename + '.pkl'
+    svm_path = 'svms/svm_' + kernel + '_' + filename + '/svm_' + kernel + '_' + filename + '.pkl'
     # Fe.train_and_save_svm(svm_path, model, feature)
-    Fe.load_and_use_svm(svm_path, duration)
+    Fe.load_and_use_svm(filename, svm_path, model, duration, feature)
 
 
 if __name__ == '__main__':

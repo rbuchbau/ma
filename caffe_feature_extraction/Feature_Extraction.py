@@ -19,7 +19,7 @@ def extract_features(filename, model, duration, feature):
     net, transformer = init_caffe_net(model)
 
     print "Preparing images."
-    all_images = load_images_to_classify(duration)
+    all_images = load_images_to_classify(transformer, duration)
 
     ### perform classification
     print "Classifying."
@@ -68,29 +68,33 @@ def train_and_save_svm(svm_path, model, feature):
     joblib.dump(clf, svm_path)
 
 
-def load_and_use_svm(svm_path, duration):
+def load_and_use_svm(filename, svm_path, model, duration, feature):
     #init caffe net
-    net, transformer = init_caffe_net(model)
+    # net, transformer = init_caffe_net(model)
+    # #read images to classify from folder
+    # print "Preparing images."
+    # all_images = load_images_to_classify(transformer, duration)
+    #
+    # ### perform classification
+    # print "Classifying."
+    # feat_vectors = classify(net, feature, all_images)
+
+    #load feature vectors from file
+    feat_vectors = np.genfromtxt('feature_vectors/fv_' + filename + '.csv',  dtype='float32', delimiter=',')
 
     #load svm from file
     svm = joblib.load(svm_path)
-
-    #read images to classify from folder
-    print "Preparing images."
-    all_images = load_images_to_classify(duration)
-
-    ### perform classification
-    print "Classifying."
-    feat_vectors = classify(net, feature, all_images)
 
     #prepare data for svm training
     X_test = np.array(feat_vectors)
 
     std_scaler = StandardScaler()
-    X_test_scaled = std_scaler.fit_transform(X_train)
+    X_test_scaled = std_scaler.fit_transform(X_test)
 
     #let it predict
+    print "Start predicting."
     predicted_labels = svm.predict(X_test_scaled)
+    print "a"
 
 
 def init_caffe_net(model):
@@ -125,7 +129,7 @@ def init_caffe_net(model):
     return net, transformer
 
 
-def convert_binaryproto_to_npy():
+def convert_binaryproto_to_npy(model):
     # convert .binaryproto to .npy
     blob = caffe.proto.caffe_pb2.BlobProto()
     data = open( caffe_root + 'new2/models/' + model + '/mean.binaryproto', 'rb' ).read()
@@ -165,7 +169,7 @@ def classify(net, feature, all_images):
     return feat_vectors
 
 
-def read_images_and_labels():
+def read_images_and_labels(transformer):
     all_images = []
     labels = []
     file_paths = []
@@ -187,7 +191,7 @@ def read_images_and_labels():
     return all_images, labels
 
 
-def load_images_to_classify(duration):
+def load_images_to_classify(transformer, duration):
     all_images = []
 
     # get number of files in directory
