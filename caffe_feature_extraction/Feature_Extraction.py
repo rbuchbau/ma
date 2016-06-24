@@ -13,7 +13,87 @@ import caffe
 import matplotlib.pyplot as plt
 import os
 
-def extract_features(filename, model, duration, feature, mode):
+
+def extract_features(filename, model, duration, feature):
+    #init caffe net
+    net, transformer = init_caffe_net(model)
+
+    print "Preparing images."
+    all_images = load_images_to_classify(duration)
+
+    ### perform classification
+    print "Classifying."
+    feat_vectors = classify(net, feature, all_images)
+
+    print "Writing feature vectors to file."
+    np.savetxt('feature_vectors/fv_' + filename + '.csv', feat_vectors, delimiter=',', fmt='%4.4f')
+
+    #load feature vectors from file
+    # txt = np.genfromtxt('feature_vectors/fv_' + filename + '.csv',  dtype='float32', delimiter=',')
+
+    # print "Plotting."
+    # plt.plot(feat)
+    # # plt.show()
+
+
+def train_and_save_svm(svm_path, model, feature):
+    #init caffe net
+    net, transformer = init_caffe_net(model)
+
+    #read images and labels from disk
+    print "Preparing images."
+    all_images, labels = read_images_and_labels(transformer)
+
+    ### perform classification
+    print "Classifying."
+    feat_vectors = classify(net, feature, all_images)
+
+    #svm stuff
+    print "Training SVM"
+
+    #prepare data for svm training
+    X_train = np.array(feat_vectors)
+    y_train = np.array(labels)
+
+    std_scaler = StandardScaler()
+    X_train_scaled = std_scaler.fit_transform(X_train)
+
+    #create classifier
+    clf = SVC(kernel='rbf', max_iter=1000, tol=1e-6)
+
+    #train svm
+    clf.fit(X_train_scaled, y_train)
+
+    #save svm to file
+    joblib.dump(clf, svm_path)
+
+
+def load_and_use_svm(svm_path, duration):
+    #init caffe net
+    net, transformer = init_caffe_net(model)
+
+    #load svm from file
+    svm = joblib.load(svm_path)
+
+    #read images to classify from folder
+    print "Preparing images."
+    all_images = load_images_to_classify(duration)
+
+    ### perform classification
+    print "Classifying."
+    feat_vectors = classify(net, feature, all_images)
+
+    #prepare data for svm training
+    X_test = np.array(feat_vectors)
+
+    std_scaler = StandardScaler()
+    X_test_scaled = std_scaler.fit_transform(X_train)
+
+    #let it predict
+    predicted_labels = svm.predict(X_test_scaled)
+
+
+def init_caffe_net(model):
     # set display defaults
     # plt.rcparams['figure.figsize'] = (10, 10)  # large images
     # plt.rcparams['image.interpolation'] = 'nearest'  # don't interpolate: show square pixels
@@ -23,14 +103,6 @@ def extract_features(filename, model, duration, feature, mode):
     model_weights = caffe_root + 'new2/models/' + model + '/' + model + '.caffemodel'
 
     net = caffe.Net(model_def, model_weights, caffe.TEST)
-
-    # convert .binaryproto to .npy
-    blob = caffe.proto.caffe_pb2.BlobProto()
-    data = open( caffe_root + 'new2/models/' + model + '/mean.binaryproto', 'rb' ).read()
-    blob.ParseFromString(data)
-    arr = np.array( caffe.io.blobproto_to_array(blob) )
-    out = arr[0]
-    np.save( caffe_root + 'new2/models/' + model + '/mean.npy' , out )
 
     # load the mean ImageNet image (as distributed with Caffe) for subtraction
     mu = np.load(
@@ -50,43 +122,20 @@ def extract_features(filename, model, duration, feature, mode):
                               3,  # 3-channel (BGR) images
                               227, 227)  # image size is 227x227
 
-
-    print "Preparing images."
-    all_images = []
-    labels = []
-    file_paths = []
-
-    if mode == 1:
-        # get number of files in directory
-        path = ffmpeg_root + duration + '/'
-        num_files = len([f for f in os.listdir(path)
-                         if os.path.isfile(os.path.join(path, f))]) - 1
-
-        # load and preprocess all image files
-        for i in range(1, num_files):
-            image = caffe.io.load_image(ffmpeg_root + duration + '/' + str(i) + '.jpg')
-            transformed_image = transformer.preprocess('data', image)
-            all_images.append(transformed_image)
-        # plt.imshow(image)
-        # plt.show()
-    elif mode == 2:
-        #read text file with labels
-        data = FileIO.read_groundtruth('/home/zexe/disk1/Downloads/original_data/data_small/val.txt')   #returns list of tupels (file_path, label)
-        for fp, label in data:
-            file_paths.append(fp)
-            labels.append(label)
-
-        for i, fp in enumerate(file_paths):
-            image = caffe.io.load_image('/home/zexe/disk1/Downloads/original_data/' + fp)
-            transformed_image = transformer.preprocess('data', image)
-            all_images.append(transformed_image)
-
-            if i % 1000 == 0:
-                print "Read " + str(i) + " images."
+    return net, transformer
 
 
-    ### perform classification
-    print "Classifying."
+def convert_binaryproto_to_npy():
+    # convert .binaryproto to .npy
+    blob = caffe.proto.caffe_pb2.BlobProto()
+    data = open( caffe_root + 'new2/models/' + model + '/mean.binaryproto', 'rb' ).read()
+    blob.ParseFromString(data)
+    arr = np.array( caffe.io.blobproto_to_array(blob) )
+    out = arr[0]
+    np.save( caffe_root + 'new2/models/' + model + '/mean.npy' , out )
+
+
+def classify(net, feature, all_images):
     caffe.set_device(0)
     caffe.set_mode_gpu()
 
@@ -113,41 +162,47 @@ def extract_features(filename, model, duration, feature, mode):
         if i % 1000 == 0:
             print "Classified " + str(i) + " images."
 
-
-    if mode == 2:
-        print "Training SVM"
-        #################
-        # SVM code
-        #################
-
-        #prepare data
-        X_train = np.array(feat_vectors)
-        y_train = np.array(labels)
-
-        std_scaler = StandardScaler()
-        X_train_scaled = std_scaler.fit_transform(X_train)
-
-        #create classifier
-        clf = SVC(kernel='linear', max_iter=1000, tol=1e-6)
-
-        #train svm
-        clf.fit(X_train_scaled, y_train)
-
-        #save svm to file
-        joblib.dump(clf, 'svms/svm_linear_' + filename + '/' + filename + '.pkl')
+    return feat_vectors
 
 
+def read_images_and_labels():
+    all_images = []
+    labels = []
+    file_paths = []
 
-    print "Writing to file."
-    # np.savetxt('feature_vectors/fv_' + filename + '.csv', feat_vectors, delimiter=',', fmt='%4.4f')
+    #read text file with labels
+    data = FileIO.read_groundtruth('/home/zexe/disk1/Downloads/original_data/data_small/val.txt')   #returns list of tupels (file_path, label)
+    for fp, label in data:
+        file_paths.append(fp)
+        labels.append(label)
 
-    # txt = np.genfromtxt('feature_vectors/fv_' + filename + '.csv',  dtype='float32', delimiter=',')
+    for i, fp in enumerate(file_paths):
+        image = caffe.io.load_image('/home/zexe/disk1/Downloads/original_data/' + fp)
+        transformed_image = transformer.preprocess('data', image)
+        all_images.append(transformed_image)
 
-    print "a"
-    #load svm from file
-    # clf2 = joblib.load('svms/svm_rbf_' + filename + '/svm_rbf' + filename + '.pkl')
+        if i % 1000 == 0:
+            print "Read " + str(i) + " images."
+
+    return all_images, labels
 
 
-    # print "Plotting."
-    # plt.plot(feat)
-    # # plt.show()
+def load_images_to_classify(duration):
+    all_images = []
+
+    # get number of files in directory
+    path = ffmpeg_root + duration + '/'
+    num_files = len([f for f in os.listdir(path)
+                     if os.path.isfile(os.path.join(path, f))]) - 1
+
+    # load and preprocess all image files
+    for i in range(1, num_files):
+        image = caffe.io.load_image(ffmpeg_root + duration + '/' + str(i) + '.jpg')
+        transformed_image = transformer.preprocess('data', image)
+        all_images.append(transformed_image)
+
+    print "Read all images."
+    # plt.imshow(image)
+    # plt.show()
+
+    return all_images
