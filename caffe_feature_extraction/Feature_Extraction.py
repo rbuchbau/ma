@@ -14,28 +14,6 @@ import matplotlib.pyplot as plt
 import os
 
 
-def extract_features(filename, model, duration, feature):
-    #init caffe net
-    net, transformer = init_caffe_net(model)
-
-    print "Preparing images."
-    all_images = load_images_to_classify(transformer, duration)
-
-    ### perform classification
-    print "Classifying."
-    feat_vectors = classify(net, feature, all_images)
-
-    print "Writing feature vectors to file."
-    np.savetxt('feature_vectors/fv_' + filename + '.csv', feat_vectors, delimiter=',', fmt='%4.4f')
-
-    #load feature vectors from file
-    # txt = np.genfromtxt('feature_vectors/fv_' + filename + '.csv',  dtype='float32', delimiter=',')
-
-    # print "Plotting."
-    # plt.plot(feat)
-    # # plt.show()
-
-
 def train_and_save_svm(svm_path, model, feature, kernel):
     #init caffe net
     net, transformer = init_caffe_net(model)
@@ -103,9 +81,7 @@ def load_and_use_svm(filename, svm_path, model, duration, feature, save=False):
 
     labels = get_labels()
 
-    for i,label in enumerate(predicted_labels):
-        if label in labels:
-            print str(i)
+    calc_accuracy(predicted_labels, 'groundtruths/groundtruth_1001_' + duration + '.csv')
 
 
 def init_caffe_net(model):
@@ -233,3 +209,37 @@ def get_labels(filename='synset_words.txt'):
             labels.append(i)
 
     return labels
+
+
+def calc_accuracy(predicted_labels, filename_csv):
+    #for prec, recall, ... calculation
+    ground_truth = FileIO.read_groundtruth(filename_csv)
+
+    list_of_groundtruth_images = []
+
+    #refactor groundtruth
+    for (a,b) in ground_truth:
+        for i in range(a,b+1):
+            list_of_groundtruth_images.append(str(i))
+
+    list_of_relevant_images = predicted_labels
+
+    list_of_true_positives = []
+
+    for ri in list_of_relevant_images:
+        if ri in list_of_groundtruth_images:
+            list_of_true_positives.append(ri)
+
+    precision = float(len(list_of_true_positives)) / len(list_of_relevant_images)
+    recall = float(len(list_of_true_positives)) / len(list_of_groundtruth_images)
+    f_measure = 2 * float(precision*recall) / (precision+recall)
+
+    precision = format(precision, '.4f')
+    recall = format(recall, '.4f')
+    f_measure = format(f_measure, '.4f')
+
+    print "Precision: " + str(precision)
+    print "Recall: " + str(recall)
+    print "F-measure: " + str(f_measure)
+
+    return float(precision), float(recall), float(f_measure)
