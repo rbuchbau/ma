@@ -210,3 +210,13 @@ def load_images_to_classify(transformer, duration):
     # plt.show()
 
     return all_images
+
+
+def get_labels(filename='synset_words.txt'):
+    data = FileIO.read_groundtruth(filename)
+    new_data = []
+
+    for i,(a,b) in enumerate(data):
+        new_data.append( (i,b) )
+
+    print "a"
