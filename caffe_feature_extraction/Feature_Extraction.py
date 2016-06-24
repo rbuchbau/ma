@@ -2,8 +2,9 @@
 import numpy as np
 import sys
 import FileIO
-from sklearn import svm
+from sklearn.svm import SVC
 from sklearn.externals import joblib
+from sklearn.preprocessing import StandardScaler
 caffe_root = '/home/zexe/caffe/'
 ffmpeg_root ='/home/zexe/disk1/Downloads/ffmpeg_video/'
 sys.path.insert(0, caffe_root + 'python')
@@ -70,7 +71,7 @@ def extract_features(filename, model, duration, feature, mode):
         # plt.show()
     elif mode == 2:
         #read text file with labels
-        data = FileIO.read_groundtruth('val.txt')   #returns list of tupels (file_path, label)
+        data = FileIO.read_groundtruth('/home/zexe/disk1/Downloads/original_data/data_small/val.txt')   #returns list of tupels (file_path, label)
         for fp, label in data:
             file_paths.append(fp)
             labels.append(label)
@@ -80,8 +81,8 @@ def extract_features(filename, model, duration, feature, mode):
             transformed_image = transformer.preprocess('data', image)
             all_images.append(transformed_image)
 
-            if i % 10000 == 0:
-                print "Read str(i) images."
+            if i % 1000 == 0:
+                print "Read " + str(i) + " images."
 
 
     ### perform classification
@@ -109,6 +110,9 @@ def extract_features(filename, model, duration, feature, mode):
         feat = feat.flat
         feat_vectors.append(feat[:])
 
+        if i % 1000 == 0:
+            print "Classified " + str(i) + " images."
+
 
     if mode == 2:
         print "Training SVM"
@@ -117,20 +121,20 @@ def extract_features(filename, model, duration, feature, mode):
         #################
 
         #prepare data
-        X_train = feat_vectors
+        X_train = np.array(feat_vectors)
         y_train = np.array(labels)
 
         std_scaler = StandardScaler()
         X_train_scaled = std_scaler.fit_transform(X_train)
 
         #create classifier
-        clf = svm.SV(kernel='rbf', max_iter=1000, tol=1e-6)
+        clf = SVC(kernel='linear', max_iter=1000, tol=1e-6)
 
         #train svm
-        svm.fit(X_train_scaled, y_train)
+        clf.fit(X_train_scaled, y_train)
 
         #save svm to file
-        joblib.dump(clf, 'svms/svm_' + filename + '.pkl')
+        joblib.dump(clf, 'svms/svm_linear_' + filename + '/' + filename + '.pkl')
 
 
 
@@ -140,6 +144,8 @@ def extract_features(filename, model, duration, feature, mode):
     # txt = np.genfromtxt('feature_vectors/fv_' + filename + '.csv',  dtype='float32', delimiter=',')
 
     print "a"
+    #load svm from file
+    # clf2 = joblib.load('svms/svm_rbf_' + filename + '/svm_rbf' + filename + '.pkl')
 
 
     # print "Plotting."
