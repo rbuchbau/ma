@@ -68,20 +68,26 @@ def train_and_save_svm(svm_path, model, feature, kernel):
     joblib.dump(clf, svm_path)
 
 
-def load_and_use_svm(filename, svm_path, model, duration, feature):
-    #init caffe net
-    # net, transformer = init_caffe_net(model)
-    # #read images to classify from folder
-    # print "Preparing images."
-    # all_images = load_images_to_classify(transformer, duration)
-    #
-    # ### perform classification
-    # print "Classifying."
-    # feat_vectors = classify(net, feature, all_images)
+def load_and_use_svm(filename, svm_path, model, duration, feature, save=False):
+    feature_vectors = 0
+    if save:
+        #init caffe net
+        net, transformer = init_caffe_net(model)
+        #read images to classify from folder
+        print "Preparing images."
+        all_images = load_images_to_classify(transformer, duration)
 
-    #load feature vectors from file
-    print "Load feature vectors."
-    feat_vectors = np.genfromtxt('feature_vectors/fv_' + filename + '.csv',  dtype='float32', delimiter=',')
+        ### perform classification
+        print "Classifying."
+        feat_vectors = classify(net, feature, all_images)
+
+        #write feature vectors
+        print "Writing feature vectors to file."
+        np.savetxt('feature_vectors/fv_' + filename + '.csv', feat_vectors, delimiter=',', fmt='%4.4f')
+    else:
+        #load feature vectors from file
+        print "Load feature vectors."
+        feat_vectors = np.genfromtxt('feature_vectors/fv_' + filename + '.csv',  dtype='float32', delimiter=',')
 
     #load svm from file
     svm = joblib.load(svm_path)
@@ -94,7 +100,6 @@ def load_and_use_svm(filename, svm_path, model, duration, feature):
     #let it predict
     print "Start predicting."
     predicted_labels = svm.predict(X_test_scaled)
-    print "a"
 
     labels = get_labels()
 
