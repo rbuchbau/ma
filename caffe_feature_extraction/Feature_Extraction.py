@@ -12,6 +12,7 @@ sys.path.append('/home/zexe/caffe/python')
 import caffe
 import matplotlib.pyplot as plt
 import os
+import numpy.linalg.norm as lan
 
 
 def train_and_save_svm(svm_path, model, feature, kernel):
@@ -148,7 +149,10 @@ def classify(net, feature, all_images):
         # get features of one layer
         feat = net.blobs[feature].data[0]
         feat = feat.flat
-        feat_vectors.append(feat[:])
+
+        #try norm
+        # feat_vectors.append(np.array(feat[:]))
+        feat_vectors.append(lan.norm(np.array(feat_vectors)))
 
         if i % 1000 == 0:
             print "Classified " + str(i) + " images."
