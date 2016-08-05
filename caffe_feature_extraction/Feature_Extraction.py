@@ -35,14 +35,18 @@ def train_and_save_svm(svm_path, model, feature, kernel):
     y_train = np.array(labels)
 
     std_scaler = StandardScaler()
-    X_train_scaled = std_scaler.fit_transform(X_train)
+    # X_train_scaled = std_scaler.fit_transform(X_train)
+    std_scaler.fit(X_train)
+    X_train_scaled = std_scaler.transform(X_train)
+    joblib.dump(std_scaler, 'svms/scaler/1.pkl')
+    # X_train_scaled = X_train
 
     # try pca first
-    print "Fit PCA"
-    pca = PCA(n_components=2)
-    pca.fit(X_train_scaled)
-    X_pca = pca.transform(X_train_scaled)
-    joblib.dump(pca, 'svms/pca/1.pkl')
+    # print "Fit PCA"
+    # pca = PCA(n_components=2)
+    # pca.fit(X_train_scaled)
+    # X_pca = pca.transform(X_train_scaled)
+    # joblib.dump(pca, 'svms/pca/1.pkl')
 
 
     #create classifier
@@ -90,12 +94,22 @@ def load_and_use_svm(filename, svm_path, model, duration, feature, save=False):
     #     vec.append(norm)
     #     vec.append(norm)
     #     feat_vectors2.append(np.array(vec[:]))
+    # X_test = np.array(feat_vectors2)
+
+    # try norm second version
+    feat_vectors2 = []
+    for feat in feat_vectors:
+        feat_np = np.array(feat[:])
+        norm = lan.norm(feat_np)
+        feat_norm = np.divide(feat_np, norm)
+        feat_vectors2.append(np.array(feat_norm[:]))
+    X_test = np.array(feat_vectors2)
 
     #prepare data for svm training
-    X_test = np.array(feat_vectors)
     # X_test = np.array(feat_vectors)
-    std_scaler = StandardScaler()
-    X_test_scaled = std_scaler.fit_transform(X_test)
+    std_scaler = joblib.load('svms/scaler/1.pkl')
+    X_test_scaled = std_scaler.transform(X_test)
+    # X_test_scaled = X_test
 
     #try pca
     # pca = joblib.load('svms/pca/1.pkl')
@@ -106,6 +120,7 @@ def load_and_use_svm(filename, svm_path, model, duration, feature, save=False):
     predicted_labels = svm.predict(X_test_scaled)
     # predicted_labels = svm.predict(X_pca)
 
+    print "Calculating evaluation parameters."
     calc_accuracy(predicted_labels, 'groundtruth_1001_' + duration + '.csv')
 
 
@@ -173,9 +188,9 @@ def classify(net, feature, all_images):
         # get features of one layer
         feat = net.blobs[feature].data[0]
         feat = feat.flat
+        # feat_vectors.append(np.array(feat[:]))
 
         #try norm
-        feat_vectors.append(np.array(feat[:]))
         # norm = lan.norm(np.array(feat[:]))
         # vec = []
         # vec.append(norm)
@@ -183,10 +198,10 @@ def classify(net, feature, all_images):
         # feat_vectors.append(np.array(vec[:]))
 
         #try norm second version
-        # feat_np = np.array(feat[:])
-        # norm = lan.norm(feat_np)
-        # feat_norm = np.divide(feat_np, norm)
-        # feat_vectors.append(np.array(feat_norm[:]))
+        feat_np = np.array(feat[:])
+        norm = lan.norm(feat_np)
+        feat_norm = np.divide(feat_np, norm)
+        feat_vectors.append(np.array(feat_norm[:]))
 
         if i % 1000 == 0:
             print "Classified " + str(i) + " images."
@@ -274,16 +289,17 @@ def calc_accuracy(predicted_labels, filename_csv):
 
     for i, label in enumerate(predicted_labels):
         if label in labels:
-            list_of_relevant_images.append(i + 1)
-
-    print str(len(list_of_groundtruth_images))
-    print str(len(list_of_relevant_images))
+            list_of_relevant_images.append( + 1)
 
     list_of_true_positives = []
 
     for ri in list_of_relevant_images:
         if ri in list_of_groundtruth_images:
             list_of_true_positives.append(ri)
+
+    print str(len(list_of_groundtruth_images))
+    print str(len(list_of_relevant_images))
+    print str(len(list_of_true_positives))
 
     precision = float(len(list_of_true_positives)) / len(list_of_relevant_images)
     recall = float(len(list_of_true_positives)) / len(list_of_groundtruth_images)
