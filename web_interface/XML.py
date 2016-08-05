@@ -44,7 +44,7 @@ def create_XML(filename_caffe, filename_csv, filename_out):
 def calc_acc(caffe_data, filename_csv):
 
     #for prec, recall, ... calculation
-    ground_truth = FileIO.read_groundtruth(filename_csv)
+    ground_truth = FileIO.read_csv(filename_csv)
 
     list_of_groundtruth_images = []
 

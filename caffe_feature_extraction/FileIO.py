@@ -3,6 +3,19 @@ import csv
 #read ground-truth
 def read_groundtruth(filename):
     data = []
+    with open('groundtruths/' + filename, 'r') as f:    #open file for reading
+        reader = csv.reader(f, delimiter=',')           #create reader
+        reader.next()
+        reader.next()
+        for line in reader:
+            if len(line) == 2:
+                data.append( (int(line[0]), int(line[1])) )
+        f.close()
+    return data
+
+
+def read_csv(filename):
+    data = []
     with open(filename, 'r') as f:    #open file for reading
         reader = csv.reader(f, delimiter=' ')           #create reader
         for line in reader:
@@ -10,6 +23,7 @@ def read_groundtruth(filename):
                 data.append( (line[0], int(line[1])) )
         f.close()
     return data
+
 
 def read_synset_words(filename):
     data = []
