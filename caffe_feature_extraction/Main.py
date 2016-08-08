@@ -10,14 +10,18 @@ def main():
     feature = 'fc7'
     kernel = 'rbf'
     filename = '' + model + '_' + duration + '_' + feature
-    svm_suffix = '_normalized_norm2'
+    svm_suffix = ''
 
     # Fe.convert_binaryproto_to_npy(model)
 
     svm_path = 'svms/svm_' + kernel + '_' + filename + svm_suffix + '/svm_' \
                + kernel + '_' + filename + svm_suffix + '.pkl'
-    Fe.train_and_save_svm(svm_path, model, feature, kernel)
-    Fe.load_and_use_svm(filename, svm_path, model, duration, feature, False)
+
+    #train svm
+    Fe.train_and_save_svm(svm_path, model, feature, kernel, True)
+
+    #use svm
+    # Fe.load_and_use_svm(filename, svm_path, model, duration, feature, False)
 
 
 if __name__ == '__main__':

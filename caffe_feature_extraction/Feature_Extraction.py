@@ -1,6 +1,9 @@
 
 import numpy as np
 import sys
+
+from blaze.server.client import post
+
 import FileIO
 from sklearn.svm import SVC
 from sklearn.externals import joblib
@@ -14,19 +17,27 @@ import matplotlib.pyplot as plt
 import os
 import scipy.linalg as lan
 from sklearn.decomposition import PCA
+import timeit
 
 
-def train_and_save_svm(svm_path, model, feature, kernel):
+def train_and_save_svm(svm_path, model, feature, kernel, save):
     #init caffe net
     net, transformer = init_caffe_net(model)
 
-    #read images and labels from disk
-    print "Preparing images."
-    all_images, labels = read_images_and_labels(transformer)
+    if save:
+        #either compute feature vectors and write them
+        labels, feat_vectors = read_and_classify_images(net, transformer, feature)
+        # write feature vectors
+        print "Writing feature vectors to file."
+        np.savetxt('feature_vectors_training/labels.csv', labels)
+        np.savetxt('feature_vectors_training/fv_0-100000.csv', feat_vectors, delimiter=',', fmt='%4.4f')
+    else:
+        #or load them from file
+        print "Loading feature vectors."
+        labels = np.genfromtxt('feature_vectors_training/labels.csv')
+        feat_vectors = np.genfromtxt('feature_vectors_training/fv.csv', dtype='float32', delimiter=',')
 
-    ### perform classification
-    print "Classifying."
-    feat_vectors = classify(net, feature, all_images)
+    feat_vectors = postprocess_feature_vectors(feat_vectors)
 
     #svm stuff
 
@@ -54,8 +65,11 @@ def train_and_save_svm(svm_path, model, feature, kernel):
     clf = SVC(kernel=kernel, max_iter=1000, tol=1e-6)
 
     #train svm
+    s_time = timeit.default_timer()
     clf.fit(X_train_scaled, y_train)
     # clf.fit(X_pca, y_train)
+
+    print "Time for training: " + str(format(timeit.default_timer() - s_time, '.4f')) + " seconds."
 
     #save svm to file
     joblib.dump(clf, svm_path)
@@ -86,27 +100,10 @@ def load_and_use_svm(filename, svm_path, model, duration, feature, save=False):
     print "Load SVM: " + svm_path
     svm = joblib.load(svm_path)
 
-    #try norm
-    # feat_vectors2 = []
-    # for f in feat_vectors:
-    #     vec = []
-    #     norm = lan.norm(f)
-    #     vec.append(norm)
-    #     vec.append(norm)
-    #     feat_vectors2.append(np.array(vec[:]))
-    # X_test = np.array(feat_vectors2)
-
-    # try norm second version
-    feat_vectors2 = []
-    for feat in feat_vectors:
-        feat_np = np.array(feat[:])
-        norm = lan.norm(feat_np)
-        feat_norm = np.divide(feat_np, norm)
-        feat_vectors2.append(np.array(feat_norm[:]))
-    X_test = np.array(feat_vectors2)
+    feat_vectors = postprocess_feature_vectors(feat_vectors)
 
     #prepare data for svm training
-    # X_test = np.array(feat_vectors)
+    X_test = np.array(feat_vectors)
     std_scaler = joblib.load('svms/scaler/1.pkl')
     X_test_scaled = std_scaler.transform(X_test)
     # X_test_scaled = X_test
@@ -166,7 +163,7 @@ def convert_binaryproto_to_npy(model):
     np.save( caffe_root + 'new2/models/' + model + '/mean.npy' , out )
 
 
-def classify(net, feature, all_images):
+def classify(net, feature, all_images, index):
     caffe.set_device(0)
     caffe.set_mode_gpu()
 
@@ -188,7 +185,7 @@ def classify(net, feature, all_images):
         # get features of one layer
         feat = net.blobs[feature].data[0]
         feat = feat.flat
-        # feat_vectors.append(np.array(feat[:]))
+        feat_vectors.append(np.array(feat[:]))
 
         #try norm
         # norm = lan.norm(np.array(feat[:]))
@@ -198,44 +195,47 @@ def classify(net, feature, all_images):
         # feat_vectors.append(np.array(vec[:]))
 
         #try norm second version
-        feat_np = np.array(feat[:])
-        norm = lan.norm(feat_np)
-        feat_norm = np.divide(feat_np, norm)
-        feat_vectors.append(np.array(feat_norm[:]))
+        # feat_np = np.array(feat[:])
+        # norm = lan.norm(feat_np)
+        # feat_norm = np.divide(feat_np, norm)
+        # feat_vectors.append(np.array(feat_norm[:]))
 
         if i % 1000 == 0:
-            print "Classified " + str(i) + " images."
+            print "Classified " + str(index + i) + " images."
 
     return feat_vectors
 
 
-def read_images_and_labels(transformer):
+def read_images_and_labels(transformer, data, offset, length):
     all_images = []
     labels = []
     file_paths = []
 
-    #read text file with labels
-    data = FileIO.read_csv('/home/zexe/disk1/Downloads/original_data/data_small/val.txt')   #returns list of tupels (file_path, label)
-    for fp, label in data:
-        file_paths.append(fp)
+    for i, (fp, label) in enumerate(data):
+        if offset <= i < (offset+length):
+            file_paths.append(fp)
         # labels.append(label)
 
     for i, (fp, label) in enumerate(data):
-        # file_paths.append(fp)
-        labels.append(label)
-        # if i == 1000:
-        #     break
+        if offset <= i < (offset+length):
+            # file_paths.append(fp)
+            labels.append(label)
+            if i == offset + length-1:
+                break
 
     for i, fp in enumerate(file_paths):
-        image = caffe.io.load_image('/home/zexe/disk1/Downloads/original_data/' + fp)
-        transformed_image = transformer.preprocess('data', image)
-        all_images.append(transformed_image)
+        try:
+            image = caffe.io.load_image('/home/zexe/disk1/Downloads/original_data/' + fp)
+            transformed_image = transformer.preprocess('data', image)
+            all_images.append(transformed_image)
+        except:
+            print "Error reading image. (Probably not an image)"
 
         if i % 1000 == 0:
-            print "Read " + str(i) + " images."
+            print "Read " + str(offset + i) + " images."
 
-        # if i == 1000:
-        #     break
+        if i == offset + length-1:
+            break
 
     return all_images, labels
 
@@ -321,3 +321,42 @@ def calc_accuracy(predicted_labels, filename_csv):
     print "Accuracy: " + str(accuracy)
 
     return float(precision), float(recall), float(f_measure)
+
+
+def read_and_classify_images(net, transformer, feature):
+    # read images and labels from disk
+    print "Preparing and classifying images."
+    # read text file with labels
+    # images_filepaths = FileIO.read_csv('/home/zexe/disk1/Downloads/original_data/data_small/val.txt')   #returns list of tupels (file_path, label)
+    images_filepaths = FileIO.read_csv(
+        '/home/zexe/disk1/Downloads/original_data/data_p_c/complete.txt')  # returns list of tupels (file_path, label)
+    length = 1000
+    for offset in range(0 / length, 100000 / length):
+        all_images, labels = read_images_and_labels(transformer, images_filepaths, offset * length, length)
+
+        ### perform classification
+        # print "Classifying."
+        feat_vectors = classify(net, feature, all_images, offset * length)
+
+    return labels, feat_vectors
+
+
+def postprocess_feature_vectors(feat_vectors):
+    feat_vectors2 = []
+
+    # try norm
+    # for f in feat_vectors:
+    #     vec = []
+    #     norm = lan.norm(f)
+    #     vec.append(norm)
+    #     vec.append(norm)
+    #     feat_vectors2.append(np.array(vec[:]))
+
+    # try norm second version
+    # for feat in feat_vectors:
+    #     feat_np = np.array(feat[:])
+    #     norm = lan.norm(feat_np)
+    #     feat_norm = np.divide(feat_np, norm)
+    #     feat_vectors2.append(np.array(feat_norm[:]))
+
+    return feat_vectors
