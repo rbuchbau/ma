@@ -14,7 +14,7 @@ def main():
 
     # Fe.convert_binaryproto_to_npy(model)
 
-    svm_path = 'svms/svm_' + kernel + '_' + filename + svm_suffix + '/svm_' \
+    svm_path = 'svms/fc7/rbf/svm_' + kernel + '_' + filename + svm_suffix + '25k/svm_' \
                + kernel + '_' + filename + svm_suffix + '.pkl'
 
     #train svm

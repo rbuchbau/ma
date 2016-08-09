@@ -24,9 +24,11 @@ def train_and_save_svm(svm_path, model, feature, kernel, save):
     #init caffe net
     net, transformer = init_caffe_net(model)
 
+    feat_vectors = []
+
     if save:
         #either compute feature vectors and write them
-        labels, feat_vectors = read_and_classify_images(net, transformer, feature)
+        labels = read_and_classify_images(net, transformer, feature, feat_vectors)
         # write feature vectors
         print "Writing feature vectors to file."
         np.savetxt('feature_vectors_training/labels.csv', labels)
@@ -35,7 +37,7 @@ def train_and_save_svm(svm_path, model, feature, kernel, save):
         #or load them from file
         print "Loading feature vectors."
         labels = np.genfromtxt('feature_vectors_training/labels.csv')
-        feat_vectors = np.genfromtxt('feature_vectors_training/fv.csv', dtype='float32', delimiter=',')
+        feat_vectors = np.genfromtxt('feature_vectors_training/fv_0-100000.csv', dtype='float32', delimiter=',')
 
     feat_vectors = postprocess_feature_vectors(feat_vectors)
 
@@ -163,11 +165,9 @@ def convert_binaryproto_to_npy(model):
     np.save( caffe_root + 'new2/models/' + model + '/mean.npy' , out )
 
 
-def classify(net, feature, all_images, index):
+def classify(net, feature, all_images, index, feat_vectors):
     caffe.set_device(0)
     caffe.set_mode_gpu()
-
-    feat_vectors = []
 
     for i, img in enumerate(all_images):
         # copy the image data into the memory allocated for the net
@@ -206,22 +206,21 @@ def classify(net, feature, all_images, index):
     return feat_vectors
 
 
-def read_images_and_labels(transformer, data, offset, length):
+def read_images_and_labels(transformer, data, labels, offset, length):
     all_images = []
-    labels = []
     file_paths = []
 
     for i, (fp, label) in enumerate(data):
         if offset <= i < (offset+length):
             file_paths.append(fp)
-        # labels.append(label)
-
-    for i, (fp, label) in enumerate(data):
-        if offset <= i < (offset+length):
-            # file_paths.append(fp)
             labels.append(label)
-            if i == offset + length-1:
-                break
+
+    # for i, (fp, label) in enumerate(data):
+    #     if offset <= i < (offset+length):
+    #         # file_paths.append(fp)
+    #         labels.append(label)
+    #         # if i == offset + length-1:
+    #         #     break
 
     for i, fp in enumerate(file_paths):
         try:
@@ -234,10 +233,10 @@ def read_images_and_labels(transformer, data, offset, length):
         if i % 1000 == 0:
             print "Read " + str(offset + i) + " images."
 
-        if i == offset + length-1:
-            break
+        # if i == offset + length-1:
+        #     break
 
-    return all_images, labels
+    return all_images
 
 
 def load_images_to_classify(transformer, duration):
@@ -323,7 +322,7 @@ def calc_accuracy(predicted_labels, filename_csv):
     return float(precision), float(recall), float(f_measure)
 
 
-def read_and_classify_images(net, transformer, feature):
+def read_and_classify_images(net, transformer, feature, feat_vectors):
     # read images and labels from disk
     print "Preparing and classifying images."
     # read text file with labels
@@ -331,14 +330,18 @@ def read_and_classify_images(net, transformer, feature):
     images_filepaths = FileIO.read_csv(
         '/home/zexe/disk1/Downloads/original_data/data_p_c/complete.txt')  # returns list of tupels (file_path, label)
     length = 1000
-    for offset in range(0 / length, 100000 / length):
-        all_images, labels = read_images_and_labels(transformer, images_filepaths, offset * length, length)
+    # feat_vectors = []
+    labels = []
+    for offset in range(0 / length, 25000 / length):
+        all_images = read_images_and_labels(transformer, images_filepaths, labels, offset * length, length)
 
         ### perform classification
         # print "Classifying."
-        feat_vectors = classify(net, feature, all_images, offset * length)
+        # feat_vectors.append(classify(net, feature, all_images, offset * length, feat_vectors))
+        classify(net, feature, all_images, offset * length, feat_vectors)
 
-    return labels, feat_vectors
+
+    return labels
 
 
 def postprocess_feature_vectors(feat_vectors):
