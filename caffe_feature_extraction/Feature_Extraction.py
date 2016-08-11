@@ -18,9 +18,10 @@ import os
 import scipy.linalg as lan
 from sklearn.decomposition import PCA
 import timeit
+import math
 
 
-def train_and_save_svm(svm_path, model, feature, kernel, save):
+def train_and_save_svm(svm_path, model, feature, kernel, svm_size, save):
     #init caffe net
     net, transformer = init_caffe_net(model)
 
@@ -28,16 +29,17 @@ def train_and_save_svm(svm_path, model, feature, kernel, save):
 
     if save:
         #either compute feature vectors and write them
-        labels = read_and_classify_images(net, transformer, feature, feat_vectors)
+        labels = read_and_classify_images(net, transformer, feature, feat_vectors, svm_size)
         # write feature vectors
         print "Writing feature vectors to file."
-        np.savetxt('feature_vectors_training/labels.csv', labels)
-        np.savetxt('feature_vectors_training/fv_0-100000.csv', feat_vectors, delimiter=',', fmt='%4.4f')
+        np.savetxt('feature_vectors_training/' + feature + '/labels_' + str(svm_size) + '.csv', labels)
+        np.savetxt('feature_vectors_training/' + feature + '/fv_0_' + str(svm_size) + '.csv', feat_vectors, delimiter=',', fmt='%4.4f')
     else:
         #or load them from file
         print "Loading feature vectors."
-        labels = np.genfromtxt('feature_vectors_training/labels.csv')
-        feat_vectors = np.genfromtxt('feature_vectors_training/fv_0-100000.csv', dtype='float32', delimiter=',')
+        labels = np.genfromtxt('feature_vectors_training/' + feature + '/labels_' + str(svm_size) + '.csv')
+        feat_vectors = np.genfromtxt('feature_vectors_training/' + feature + '/fv_0_' + str(svm_size) + '.csv',
+                                     dtype='float32', delimiter=',')
 
     feat_vectors = postprocess_feature_vectors(feat_vectors)
 
@@ -51,7 +53,7 @@ def train_and_save_svm(svm_path, model, feature, kernel, save):
     # X_train_scaled = std_scaler.fit_transform(X_train)
     std_scaler.fit(X_train)
     X_train_scaled = std_scaler.transform(X_train)
-    joblib.dump(std_scaler, 'svms/scaler/1.pkl')
+    joblib.dump(std_scaler, 'svms/scaler/' + feature + '_' + str(svm_size) + '.pkl')
     # X_train_scaled = X_train
 
     # try pca first
@@ -71,13 +73,15 @@ def train_and_save_svm(svm_path, model, feature, kernel, save):
     clf.fit(X_train_scaled, y_train)
     # clf.fit(X_pca, y_train)
 
-    print "Time for training: " + str(format(timeit.default_timer() - s_time, '.4f')) + " seconds."
+    time = format(timeit.default_timer() - s_time, '.4f')
+    print "Time for training: " + str(time) + " seconds."
+    FileIO.write_times('svm_training_times.csv', time, svm_size, kernel)
 
     #save svm to file
     joblib.dump(clf, svm_path)
 
 
-def load_and_use_svm(filename, svm_path, model, duration, feature, save=False):
+def load_and_use_svm(filename, svm_path, model, duration, feature, video, svm_size, save=False):
     feature_vectors = 0
     if save:
         #init caffe net
@@ -92,11 +96,13 @@ def load_and_use_svm(filename, svm_path, model, duration, feature, save=False):
 
         #write feature vectors
         print "Writing feature vectors to file."
-        np.savetxt('feature_vectors/fv_' + filename + '.csv', feat_vectors, delimiter=',', fmt='%4.4f')
+        np.savetxt('feature_vectors/' + feature + '/' + video + '/fv_' + filename + '.csv',
+                   feat_vectors, delimiter=',', fmt='%4.4f')
     else:
         #load feature vectors from file
         print "Loading feature vectors."
-        feat_vectors = np.genfromtxt('feature_vectors/fv_' + filename + '.csv',  dtype='float32', delimiter=',')
+        feat_vectors = np.genfromtxt('feature_vectors/' + feature + '/' + video + '/fv_' + filename + '.csv',
+                                     dtype='float32', delimiter=',')
 
     #load svm from file
     print "Load SVM: " + svm_path
@@ -106,7 +112,7 @@ def load_and_use_svm(filename, svm_path, model, duration, feature, save=False):
 
     #prepare data for svm training
     X_test = np.array(feat_vectors)
-    std_scaler = joblib.load('svms/scaler/1.pkl')
+    std_scaler = joblib.load('svms/scaler/' + feature + '_' + str(svm_size) + '.pkl')
     X_test_scaled = std_scaler.transform(X_test)
     # X_test_scaled = X_test
 
@@ -120,7 +126,7 @@ def load_and_use_svm(filename, svm_path, model, duration, feature, save=False):
     # predicted_labels = svm.predict(X_pca)
 
     print "Calculating evaluation parameters."
-    calc_accuracy(predicted_labels, 'groundtruth_1001_' + duration + '.csv')
+    calc_accuracy(predicted_labels, 'groundtruth' + video + '_' + duration + '.csv', video)
 
 
 def init_caffe_net(model):
@@ -272,9 +278,9 @@ def get_labels(filename='synset_words.txt'):
     return labels
 
 
-def calc_accuracy(predicted_labels, filename_csv):
+def calc_accuracy(predicted_labels, filename_csv, video):
     #for prec, recall, ... calculation
-    ground_truth = FileIO.read_groundtruth(filename_csv)
+    ground_truth = FileIO.read_groundtruth(filename_csv, video)
     labels = get_labels()
 
     list_of_groundtruth_images = []
@@ -322,7 +328,7 @@ def calc_accuracy(predicted_labels, filename_csv):
     return float(precision), float(recall), float(f_measure)
 
 
-def read_and_classify_images(net, transformer, feature, feat_vectors):
+def read_and_classify_images(net, transformer, feature, feat_vectors, svm_size):
     # read images and labels from disk
     print "Preparing and classifying images."
     # read text file with labels
@@ -332,7 +338,7 @@ def read_and_classify_images(net, transformer, feature, feat_vectors):
     length = 1000
     # feat_vectors = []
     labels = []
-    for offset in range(0 / length, 25000 / length):
+    for offset in range(0 / length, svm_size / length):
         all_images = read_images_and_labels(transformer, images_filepaths, labels, offset * length, length)
 
         ### perform classification
@@ -363,3 +369,5 @@ def postprocess_feature_vectors(feat_vectors):
     #     feat_vectors2.append(np.array(feat_norm[:]))
 
     return feat_vectors
+
+
