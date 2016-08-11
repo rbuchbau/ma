@@ -29,7 +29,7 @@ def train_and_save_svm(svm_path, model, feature, kernel, svm_size, save):
 
     if save:
         #either compute feature vectors and write them
-        labels = read_and_classify_images(net, transformer, feature, feat_vectors, svm_size)
+        labels, feat_vectors = read_and_classify_images(net, transformer, feature, feat_vectors, svm_size)
         # write feature vectors
         print "Writing feature vectors to file."
         np.savetxt('feature_vectors_training/' + feature + '/labels_' + str(svm_size) + '.csv', labels)
@@ -56,14 +56,6 @@ def train_and_save_svm(svm_path, model, feature, kernel, svm_size, save):
     joblib.dump(std_scaler, 'svms/scaler/' + feature + '_' + str(svm_size) + '.pkl')
     # X_train_scaled = X_train
 
-    # try pca first
-    # print "Fit PCA"
-    # pca = PCA(n_components=2)
-    # pca.fit(X_train_scaled)
-    # X_pca = pca.transform(X_train_scaled)
-    # joblib.dump(pca, 'svms/pca/1.pkl')
-
-
     #create classifier
     print "Training SVM"
     clf = SVC(kernel=kernel, max_iter=1000, tol=1e-6)
@@ -88,11 +80,12 @@ def load_and_use_svm(filename, svm_path, model, duration, feature, video, svm_si
         net, transformer = init_caffe_net(model)
         #read images to classify from folder
         print "Preparing images."
-        all_images = load_images_to_classify(transformer, duration)
+        all_images = load_images_to_classify(transformer, duration, video)
 
         ### perform classification
         print "Classifying."
-        feat_vectors = classify(net, feature, all_images)
+        feat_vectors = []
+        classify(net, feature, all_images, feat_vectors)
 
         #write feature vectors
         print "Writing feature vectors to file."
@@ -126,7 +119,7 @@ def load_and_use_svm(filename, svm_path, model, duration, feature, video, svm_si
     # predicted_labels = svm.predict(X_pca)
 
     print "Calculating evaluation parameters."
-    calc_accuracy(predicted_labels, 'groundtruth' + video + '_' + duration + '.csv', video)
+    calc_accuracy(predicted_labels, video + '/groundtruth_' + video + '_' + duration + '.csv')
 
 
 def init_caffe_net(model):
@@ -171,9 +164,11 @@ def convert_binaryproto_to_npy(model):
     np.save( caffe_root + 'new2/models/' + model + '/mean.npy' , out )
 
 
-def classify(net, feature, all_images, index, feat_vectors):
+def classify(net, feature, all_images, index=0):
     caffe.set_device(0)
     caffe.set_mode_gpu()
+
+    feat_vectors = []
 
     for i, img in enumerate(all_images):
         # copy the image data into the memory allocated for the net
@@ -216,6 +211,8 @@ def read_images_and_labels(transformer, data, labels, offset, length):
     all_images = []
     file_paths = []
 
+    labels = []
+
     for i, (fp, label) in enumerate(data):
         if offset <= i < (offset+length):
             file_paths.append(fp)
@@ -234,7 +231,7 @@ def read_images_and_labels(transformer, data, labels, offset, length):
             transformed_image = transformer.preprocess('data', image)
             all_images.append(transformed_image)
         except:
-            print "Error reading image. (Probably not an image)"
+            print "Error reading image (Probably not an image)."
 
         if i % 1000 == 0:
             print "Read " + str(offset + i) + " images."
@@ -242,20 +239,20 @@ def read_images_and_labels(transformer, data, labels, offset, length):
         # if i == offset + length-1:
         #     break
 
-    return all_images
+    return all_images, labels
 
 
-def load_images_to_classify(transformer, duration):
+def load_images_to_classify(transformer, duration, video):
     all_images = []
 
     # get number of files in directory
-    path = ffmpeg_root + duration + '/'
+    path = ffmpeg_root + video + '/' + duration + '/'
     num_files = len([f for f in os.listdir(path)
                      if os.path.isfile(os.path.join(path, f))]) - 1
 
     # load and preprocess all image files
     for i in range(1, num_files):
-        image = caffe.io.load_image(ffmpeg_root + duration + '/' + str(i) + '.jpg')
+        image = caffe.io.load_image(ffmpeg_root + video + '/' + duration + '/' + str(i) + '.jpg')
         transformed_image = transformer.preprocess('data', image)
         all_images.append(transformed_image)
 
@@ -278,9 +275,9 @@ def get_labels(filename='synset_words.txt'):
     return labels
 
 
-def calc_accuracy(predicted_labels, filename_csv, video):
+def calc_accuracy(predicted_labels, filename_csv):
     #for prec, recall, ... calculation
-    ground_truth = FileIO.read_groundtruth(filename_csv, video)
+    ground_truth = FileIO.read_groundtruth(filename_csv)
     labels = get_labels()
 
     list_of_groundtruth_images = []
@@ -294,7 +291,7 @@ def calc_accuracy(predicted_labels, filename_csv, video):
 
     for i, label in enumerate(predicted_labels):
         if label in labels:
-            list_of_relevant_images.append( + 1)
+            list_of_relevant_images.append(i + 1)
 
     list_of_true_positives = []
 
@@ -335,19 +332,25 @@ def read_and_classify_images(net, transformer, feature, feat_vectors, svm_size):
     # images_filepaths = FileIO.read_csv('/home/zexe/disk1/Downloads/original_data/data_small/val.txt')   #returns list of tupels (file_path, label)
     images_filepaths = FileIO.read_csv(
         '/home/zexe/disk1/Downloads/original_data/data_p_c/complete.txt')  # returns list of tupels (file_path, label)
-    length = 1000
-    # feat_vectors = []
+    length = 16000
     labels = []
+
+
+    feat_vectors = []
+
+
     for offset in range(0 / length, svm_size / length):
-        all_images = read_images_and_labels(transformer, images_filepaths, labels, offset * length, length)
+        # all_images = read_images_and_labels(transformer, images_filepaths, labels, offset * length, length)
+        all_images, labels = read_images_and_labels(transformer, images_filepaths, [], offset * length, length)
 
         ### perform classification
         # print "Classifying."
-        # feat_vectors.append(classify(net, feature, all_images, offset * length, feat_vectors))
-        classify(net, feature, all_images, offset * length, feat_vectors)
+
+        feat_vectors = classify(net, feature, all_images, offset * length)
+        # classify(net, feature, all_images, feat_vectors, offset * length)
 
 
-    return labels
+    return labels, feat_vectors
 
 
 def postprocess_feature_vectors(feat_vectors):
