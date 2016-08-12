@@ -29,7 +29,8 @@ def train_and_save_svm(svm_path, model, feature, kernel, svm_size, save):
 
     if save:
         #either compute feature vectors and write them
-        labels, feat_vectors = read_and_classify_images(net, transformer, feature, feat_vectors, svm_size)
+        labels = read_and_classify_images(net, transformer, feature, feat_vectors, svm_size)
+        # labels, feat_vectors = read_and_classify_images(net, transformer, feature, feat_vectors, svm_size)
         # write feature vectors
         print "Writing feature vectors to file."
         np.savetxt('feature_vectors_training/' + feature + '/labels_' + str(svm_size) + '.csv', labels)
@@ -164,11 +165,11 @@ def convert_binaryproto_to_npy(model):
     np.save( caffe_root + 'new2/models/' + model + '/mean.npy' , out )
 
 
-def classify(net, feature, all_images, index=0):
+def classify(net, feature, all_images, feat_vectors, index=0):
     caffe.set_device(0)
     caffe.set_mode_gpu()
 
-    feat_vectors = []
+    # feat_vectors = []
 
     for i, img in enumerate(all_images):
         # copy the image data into the memory allocated for the net
@@ -211,7 +212,7 @@ def read_images_and_labels(transformer, data, labels, offset, length):
     all_images = []
     file_paths = []
 
-    labels = []
+    # labels = []
 
     for i, (fp, label) in enumerate(data):
         if offset <= i < (offset+length):
@@ -239,7 +240,8 @@ def read_images_and_labels(transformer, data, labels, offset, length):
         # if i == offset + length-1:
         #     break
 
-    return all_images, labels
+    return all_images
+    # return all_images, labels
 
 
 def load_images_to_classify(transformer, duration, video):
@@ -329,28 +331,28 @@ def read_and_classify_images(net, transformer, feature, feat_vectors, svm_size):
     # read images and labels from disk
     print "Preparing and classifying images."
     # read text file with labels
-    # images_filepaths = FileIO.read_csv('/home/zexe/disk1/Downloads/original_data/data_small/val.txt')   #returns list of tupels (file_path, label)
-    images_filepaths = FileIO.read_csv(
-        '/home/zexe/disk1/Downloads/original_data/data_p_c/complete.txt')  # returns list of tupels (file_path, label)
-    length = 16000
+    images_filepaths = FileIO.read_csv('/home/zexe/disk1/Downloads/original_data/data_small/val.txt')   #returns list of tupels (file_path, label)
+    # images_filepaths = FileIO.read_csv(
+    #     '/home/zexe/disk1/Downloads/original_data/data_p_c/complete.txt')  # returns list of tupels (file_path, label)
+    length = 1000
     labels = []
 
 
-    feat_vectors = []
+    # feat_vectors = []
 
 
     for offset in range(0 / length, svm_size / length):
-        # all_images = read_images_and_labels(transformer, images_filepaths, labels, offset * length, length)
-        all_images, labels = read_images_and_labels(transformer, images_filepaths, [], offset * length, length)
+        all_images = read_images_and_labels(transformer, images_filepaths, labels, offset * length, length)
+        # all_images, labels = read_images_and_labels(transformer, images_filepaths, [], offset * length, length)
 
         ### perform classification
         # print "Classifying."
 
-        feat_vectors = classify(net, feature, all_images, offset * length)
-        # classify(net, feature, all_images, feat_vectors, offset * length)
+        # feat_vectors = classify(net, feature, all_images, offset * length)
+        classify(net, feature, all_images, feat_vectors, offset * length)
 
 
-    return labels, feat_vectors
+    return labels
 
 
 def postprocess_feature_vectors(feat_vectors):

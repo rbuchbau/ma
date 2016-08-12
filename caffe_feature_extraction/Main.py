@@ -25,13 +25,13 @@ def main():
 
     # for svm_size in svm_s:
     #     svm_path = 'svms/' + feature + '/' + kernel + '/svm_' + kernel + '_' + filename + '_' \
-    #                + str(svm_size) + '/svm_' + kernel + '_' + filename + '_' + str(svm_size) + '.pkl'
+    #                + str(svm_size) + '_step/svm_' + kernel + '_' + filename + '_' + str(svm_size) + '.pkl'
     #
     #     #train svm
     #     Fe.train_and_save_svm(svm_path, model, feature, kernel, svm_size, True)
 
     #use svm
-    svm_path = 'svms/' + feature + '/' + kernel + '/svm_' + kernel + '_' + filename + '_' + str(svm_s[0]) + '/svm_' \
+    svm_path = 'svms/' + feature + '/' + kernel + '/svm_' + kernel + '_' + filename + '_' + str(svm_s[0]) + '_step/svm_' \
                + kernel + '_' + filename + '_' + str(svm_s[0]) + '.pkl'
     v = videos[0]
     Fe.load_and_use_svm(filename, svm_path, model, duration, feature, v, svm_s[0], False)
