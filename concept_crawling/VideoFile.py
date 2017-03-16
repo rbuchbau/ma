@@ -1,5 +1,8 @@
 class VideoFile:
-    id = 0
+    id = ''
     filename = ''
     source = ''
     filepath = ''
+
+    def toString(self):
+        return self.id + ' ' + self.filename + ' ' + self.source + ' ' + self.filepath

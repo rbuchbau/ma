@@ -4,6 +4,8 @@ import xml.etree.ElementTree as ET
 import Concept
 import ConceptsList
 import VideoFile
+import os
+import Shot
 
 
 # read ground-truth
@@ -79,10 +81,152 @@ def read_xml_tree(filename, conceptsList, videofiles):
 
     return videofiles
 
+
 def export_videofilepaths(filename, videofiles):
     with open(filename, 'w') as f:
         for v in videofiles:
             line = '"' + v.filepath + '"\n'
             f.write(line)
+        f.close()
+
+
+def export_videofileids(filename, videofiles):
+    with open(filename, 'w') as f:
+        for v in videofiles:
+            line = '"' + v.ids + '"\n'
+            f.write(line)
+        f.close()
+
+
+def readConceptTxt(filename):
+    conceptsList = ConceptsList.ConceptsList()
+    conceptsList.dictionary = {}
+    with open(filename, 'r') as f:  # open file for reading
+        reader = csv.reader(f, delimiter=' ')  # create reader
+        for line in reader:
+            if len(line) == 3:
+                concept = Concept.Concept()
+                concept.name = line[0]
+                concept.shots = []
+                concept.videos = []
+                linesplit = line[1].split(',')
+
+                for l in linesplit:
+                    concept.shots.append(l)
+                concept.numberOfShots = len(concept.shots)
+
+                linesplit2 = line[2].split(',')
+
+                for l in linesplit2:
+                    concept.videos.append(l)
+
+                conceptsList.dictionary[line[0]] = concept
 
         f.close()
+        conceptsList.createList()
+
+    return conceptsList
+
+
+def read_shot_xmls():
+    path = 'shot_xmls/'
+    files = [name for name in os.listdir(path) if os.path.isfile(path + name)]
+    shots = {}
+
+    for f in files:
+        shots.update(read_shot_xml(path + f))
+
+    return shots
+
+
+def read_shot_xml(filename):
+    shots = {}
+    id = ''
+    timestamp = ''
+    searchForMediaTimepoint = False
+    with open(filename, 'r') as f:
+        alllines = f.readlines()
+        for line in alllines:
+            if 'RKF' in line:
+                splits = line.split('"')
+                without_RKF = splits[1].split('_RKF')
+                id = without_RKF[0]
+                searchForMediaTimepoint = True
+
+            if '<MediaTimePoint' in line:
+                if searchForMediaTimepoint:
+                    first = line.split('>')
+                    second = first[1].split('<')
+                    timestamp = second[0]
+                    shot = Shot.Shot(id, timestamp, True)
+                    shots[id] = shot
+                    searchForMediaTimepoint = False
+
+        f.close()
+
+    return shots
+
+
+def export_shots(filename, shots):
+    with open(filename, 'w') as f:
+        for s in shots.values():
+            f.write(s.toString() + '\n')
+        f.close()
+
+
+def read_shots_from_file(filename):
+    shots = {}
+    with open(filename, 'r') as f:
+        # alllines = f.readlines()
+        line = f.readline()
+        while line != '':
+            splits = line.split(' ')
+            if len(splits) > 0:
+                shot = Shot.Shot(splits[0], splits[1].split('\n')[0], False)
+                shots[shot.name] = shot
+            line = f.readline()
+
+        f.close()
+
+    return shots
+
+
+def read_selected_shots_from_file(filename, conceptsList):
+    shots2 = {}
+
+    shots = read_shots_from_file(filename)
+    for concept in conceptsList.dictionary.values():
+        for shotname in concept.shots:
+            shots2[shotname] = shots[shotname]
+
+    return shots2
+
+
+def export_videofiles(filename, videofiles):
+    with open(filename, 'w') as f:
+        for v in videofiles:
+            f.write(v.toString() + '\n')
+
+        f.close()
+
+
+def read_videofiles(filename):
+    videofiles = []
+
+    with open(filename, 'r') as f:
+        line = f.readline()
+        while line != '':
+            splits = line.split(' ')
+            if len(splits) == 4:
+                video = VideoFile.VideoFile()
+                video.id = splits[0]
+                video.filename = splits[1]
+                video.source = splits[2]
+                video.filepath = splits[3]
+                videofiles.append(video)
+
+            line = f.readline()
+
+        f.close()
+
+    return videofiles
