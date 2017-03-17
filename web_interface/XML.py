@@ -44,7 +44,7 @@ def create_XML(filename_caffe, filename_csv, filename_out):
 def calc_acc(caffe_data, filename_csv):
 
     #for prec, recall, ... calculation
-    ground_truth = FileIO.read_csv(filename_csv)
+    ground_truth = FileIO.read_groundtruth(filename_csv)
 
     list_of_groundtruth_images = []
 
@@ -65,6 +65,10 @@ def calc_acc(caffe_data, filename_csv):
     for ri in list_of_relevant_images:
         if ri in list_of_groundtruth_images:
             list_of_true_positives.append(ri)
+
+    print str(len(list_of_groundtruth_images))
+    print str(len(list_of_relevant_images))
+    print str(len(list_of_true_positives))
 
     precision = float(len(list_of_true_positives)) / len(list_of_relevant_images)
     recall = float(len(list_of_true_positives)) / len(list_of_groundtruth_images)
@@ -111,7 +115,8 @@ def read_caffe_file(filename, acc_idx):
             #get the tags
             idx21 = 6
             tags = []
-            for j in range(0,5):
+            for j in range(0,1):
+            # for j in range(0,5):
                 line2 = reader.next()[0]
                 #accuracy > threshold ?
                 if float(line2[0:idx21]) > ACC[acc_idx]:
