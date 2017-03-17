@@ -251,3 +251,11 @@ def readDoubleVideos(filename):
         f.close()
 
     return double_videos
+
+
+def export_ffmpeg(filename, ffmpeg_commands):
+    with open(filename, 'w') as f:
+        for c in ffmpeg_commands:
+            f.write(c + '\n')
+
+        f.close()

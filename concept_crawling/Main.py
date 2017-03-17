@@ -34,8 +34,8 @@ def main():
     # FileIO.export_shots('shots.csv', shots)
     needed_shots = FileIO.read_selected_shots_from_file('shots.csv', conceptsList)
 
-    createFFMPEGCommands(needed_shots, path)
-
+    ffmpeg_commands = createFFMPEGCommands(needed_shots, path)
+    FileIO.export_ffmpeg('ffmpeg_commands.txt', ffmpeg_commands)
 
 
     print " "
@@ -91,14 +91,16 @@ def createFolders(videofiles, path):
 
 
 def createFFMPEGCommands(needed_shots, path):
+    commands = []
     videodirs = [name for name in os.listdir(path) if os.path.isdir(path + name)]
     for v in videodirs:
         for shot in needed_shots.values():
             if v == shot.video:
-                print 'ffmpeg -ss ' + shot.timestamp + ' -i ' + \
+                commands.append('ffmpeg -ss ' + shot.timestamp + ' -i ' + \
                       shot.video + '/' + shot.video + '.mp4 -t 0.04 ' + \
-                      shot.video + '/%03d.jpg;'
+                      shot.video + '/%03d.jpg;')
 
+    return commands
 
 
 if __name__ == '__main__':
