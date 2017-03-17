@@ -29,7 +29,7 @@ def moveFiles(videolist, videos):
 
     with open('double_elements.txt', 'w') as f:
         for d in double_elements:
-            f.write(d.toString())
+            f.write(d.id)
 
         f.close()
 

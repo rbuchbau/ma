@@ -9,7 +9,7 @@ import Shot
 
 
 # read ground-truth
-def read_labels(filename, conceptsList):
+def read_labels(filename, conceptsList, double_videos):
     with open(filename, 'r') as f:  # open file for reading
         conceptid = ''
         conceptshot = ''
@@ -21,25 +21,30 @@ def read_labels(filename, conceptsList):
             if len(line) == 5:
                 conceptid = line[0]
                 conceptshot = line[2]
-                conceptgroundtruth = line[4]
 
-                if conceptgroundtruth == '1':
-                    if not conceptsList.contains(conceptid):
-                        concept = Concept.Concept()
-                        concept.name = conceptid
-                        concept.shots = []
-                        concept.videos = []
-                    else:
-                        concept = conceptsList.dictionary[conceptid]
-                    concept.shots.append(conceptshot)
+                first = conceptshot.split('_')[0]
+                second = first.split('shot')[1]
 
-                    video = conceptshot.split('_')[0].split('shot')[1]
-                    if video not in concept.videos:
-                        concept.videos.append(video)
+                if second not in double_videos:
+                    conceptgroundtruth = line[4]
 
-                    concept.numberOfShots += 1
+                    if conceptgroundtruth == '1':
+                        if not conceptsList.contains(conceptid):
+                            concept = Concept.Concept()
+                            concept.name = conceptid
+                            concept.shots = []
+                            concept.videos = []
+                        else:
+                            concept = conceptsList.dictionary[conceptid]
+                        concept.shots.append(conceptshot)
 
-                    conceptsList.dictionary[conceptid] = concept
+                        video = conceptshot.split('_')[0].split('shot')[1]
+                        if video not in concept.videos:
+                            concept.videos.append(video)
+
+                        concept.numberOfShots += 1
+
+                        conceptsList.dictionary[conceptid] = concept
         f.close()
     return conceptsList
 
@@ -233,17 +238,16 @@ def read_videofiles(filename):
 
 
 def readDoubleVideos(filename):
+    double_videos = []
+
     with open(filename, 'r') as f:
         line = f.readline()
         while line != '':
-            splits = line.split(' ')
-            if len(splits) == 4:
-                v = VideoFile.VideoFile()
-                v.id = line[0]
-                v.filename = line[1]
-                v.source = line[2]
-                v.filepath = line[3]
+            splits = line.split('\n')
+            double_videos.append(splits[0])
 
             line = f.readline()
 
         f.close()
+
+    return double_videos

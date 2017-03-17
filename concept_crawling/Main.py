@@ -11,23 +11,21 @@ def main():
     # read double videos
     double_videos = FileIO.readDoubleVideos('double_elements.txt')
 
+    #create all
     # create list of concepts
     # ids = ['1267', '1005', '1015', '1261', '1031', '1010', '1006']
-    # conceptsList = createConceptsList()
+    # conceptsList = createConceptsList(ids, double_videos)
+    # # create list of videos
+    # createVideofiles(conceptsList)
+
 
     # or read them from csv
     conceptsList = FileIO.readConceptTxt('concepts.txt')
-
-    path = 'videodataset/'
-
-    # create list of videos
-    # createVideofiles(conceptsList)
-
-    # or read from csv
     videofiles = FileIO.read_videofiles('needed_videos.txt')
 
 
     # create folders and move videofiles, also check for double videos and export them
+    path = 'videodataset/'
     # createFolders(videofiles, path)
 
 
@@ -36,7 +34,6 @@ def main():
     # FileIO.export_shots('shots.csv', shots)
     needed_shots = FileIO.read_selected_shots_from_file('shots.csv', conceptsList)
 
-    path = 'videodataset/'
     createFFMPEGCommands(needed_shots, path)
 
 
@@ -44,13 +41,13 @@ def main():
     print " "
 
 
-def createConceptsList(ids):
+def createConceptsList(ids, double_videos):
     time1 = timeit.default_timer()
 
     # read concepts from labels files
     conceptsList = ConceptsList.ConceptsList()
-    conceptsList = FileIO.read_labels('groundtruths/labels.txt', conceptsList)
-    conceptsList = FileIO.read_labels('groundtruths/labels2.txt', conceptsList)
+    conceptsList = FileIO.read_labels('groundtruths/labels.txt', conceptsList, double_videos)
+    conceptsList = FileIO.read_labels('groundtruths/labels2.txt', conceptsList, double_videos)
 
     time2 = timeit.default_timer()
     print "Time: " + str(time2 - time1) + " seconds"
