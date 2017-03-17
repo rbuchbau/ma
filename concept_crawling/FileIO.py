@@ -230,3 +230,20 @@ def read_videofiles(filename):
         f.close()
 
     return videofiles
+
+
+def readDoubleVideos(filename):
+    with open(filename, 'r') as f:
+        line = f.readline()
+        while line != '':
+            splits = line.split(' ')
+            if len(splits) == 4:
+                v = VideoFile.VideoFile()
+                v.id = line[0]
+                v.filename = line[1]
+                v.source = line[2]
+                v.filepath = line[3]
+
+            line = f.readline()
+
+        f.close()

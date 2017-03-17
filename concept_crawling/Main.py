@@ -8,6 +8,9 @@ import Shot
 
 def main():
 
+    # read double videos
+    double_videos = FileIO.readDoubleVideos('double_elements.txt')
+
     # create list of concepts
     # ids = ['1267', '1005', '1015', '1261', '1031', '1010', '1006']
     # conceptsList = createConceptsList()
@@ -22,7 +25,11 @@ def main():
 
     # or read from csv
     videofiles = FileIO.read_videofiles('needed_videos.txt')
-    createFolders(videofiles, path)
+
+
+    # create folders and move videofiles, also check for double videos and export them
+    # createFolders(videofiles, path)
+
 
 
     # shots = FileIO.read_shot_xmls()
