@@ -74,8 +74,8 @@ def train_and_save_svm(svm_path, model, feature, kernel, svm_size, save):
     joblib.dump(clf, svm_path)
 
 
-def load_and_use_svm(filename, svm_path, model, duration, feature, video, svm_size, save=False):
-    feature_vectors = 0
+def load_and_use_svm(svm_path, model, duration, feature, video, svm_size, save=False):
+    filename = feature + '_' + duration
     if save:
         #init caffe net
         net, transformer = init_caffe_net(model)
@@ -89,7 +89,7 @@ def load_and_use_svm(filename, svm_path, model, duration, feature, video, svm_si
         classify(net, feature, all_images, feat_vectors)
 
         #write feature vectors
-        print "Writing feature vectors to file."
+        print "Writing feature vectors to file: " + feature + filename + "."
         np.savetxt('feature_vectors/' + feature + '/' + video + '/fv_' + filename + '.csv',
                    feat_vectors, delimiter=',', fmt='%4.4f')
     else:
@@ -116,11 +116,17 @@ def load_and_use_svm(filename, svm_path, model, duration, feature, video, svm_si
 
     #let it predict
     print "Start predicting."
+    s_time = timeit.default_timer()
     predicted_labels = svm.predict(X_test_scaled)
     # predicted_labels = svm.predict(X_pca)
+    time = format(timeit.default_timer() - s_time, '.4f')
 
     print "Calculating evaluation parameters."
-    calc_accuracy(predicted_labels, video + '/groundtruth_' + video + '_' + duration + '.csv')
+    acc_values = calc_accuracy(predicted_labels, video + '/groundtruth_' + video + '_' + duration + '.csv', video)
+    (p, r, f) = acc_values
+    acc_values2 = (p, r, f, time, len(X_test_scaled))
+
+    return acc_values2
 
 
 def init_caffe_net(model):
@@ -189,19 +195,6 @@ def classify(net, feature, all_images, feat_vectors, index=0):
         feat = feat.flat
         feat_vectors.append(np.array(feat[:]))
 
-        #try norm
-        # norm = lan.norm(np.array(feat[:]))
-        # vec = []
-        # vec.append(norm)
-        # vec.append(norm)
-        # feat_vectors.append(np.array(vec[:]))
-
-        #try norm second version
-        # feat_np = np.array(feat[:])
-        # norm = lan.norm(feat_np)
-        # feat_norm = np.divide(feat_np, norm)
-        # feat_vectors.append(np.array(feat_norm[:]))
-
         if i % 1000 == 0:
             print "Classified " + str(index + i) + " images."
 
@@ -219,13 +212,6 @@ def read_images_and_labels(transformer, data, labels, offset, length):
             file_paths.append(fp)
             labels.append(label)
 
-    # for i, (fp, label) in enumerate(data):
-    #     if offset <= i < (offset+length):
-    #         # file_paths.append(fp)
-    #         labels.append(label)
-    #         # if i == offset + length-1:
-    #         #     break
-
     for i, fp in enumerate(file_paths):
         try:
             image = caffe.io.load_image('/home/zexe/disk1/Downloads/original_data/' + fp)
@@ -237,11 +223,10 @@ def read_images_and_labels(transformer, data, labels, offset, length):
         if i % 1000 == 0:
             print "Read " + str(offset + i) + " images."
 
-        # if i == offset + length-1:
-        #     break
+        if i == offset + length-1:
+            break
 
     return all_images
-    # return all_images, labels
 
 
 def load_images_to_classify(transformer, duration, video):
@@ -258,6 +243,9 @@ def load_images_to_classify(transformer, duration, video):
         transformed_image = transformer.preprocess('data', image)
         all_images.append(transformed_image)
 
+        if i % 1000 == 0:
+            print "Read " + str(i) + " images."
+
     print "Read all images."
     # plt.imshow(image)
     # plt.show()
@@ -265,22 +253,25 @@ def load_images_to_classify(transformer, duration, video):
     return all_images
 
 
-def get_labels(filename='synset_words.txt'):
-    data = FileIO.read_synset_words(filename)
+def get_labels(video, filename='groundtruths/labels.txt'):
+# def get_labels(filename='synset_words.txt'):
+    # data = FileIO.read_synset_words(filename)
+    #
+    # labels = []
+    #
+    # for i,cls in enumerate(data):
+    #     if cls == 'sport' or cls == 'water sport':
+    #         labels.append(i)
 
-    labels = []
-
-    for i,cls in enumerate(data):
-        if cls == 'sport' or cls == 'water sport':
-            labels.append(i)
+    labels = FileIO.read_labels(filename, video)
 
     return labels
 
 
-def calc_accuracy(predicted_labels, filename_csv):
+def calc_accuracy(predicted_labels, filename_csv, video):
     #for prec, recall, ... calculation
     ground_truth = FileIO.read_groundtruth(filename_csv)
-    labels = get_labels()
+    labels = get_labels(video)
 
     list_of_groundtruth_images = []
 
@@ -305,24 +296,26 @@ def calc_accuracy(predicted_labels, filename_csv):
     print str(len(list_of_relevant_images))
     print str(len(list_of_true_positives))
 
-    precision = float(len(list_of_true_positives)) / len(list_of_relevant_images)
-    recall = float(len(list_of_true_positives)) / len(list_of_groundtruth_images)
-    f_measure = 2 * float(precision*recall) / (precision+recall)
-
-    accuracy = float(
-        len(list_of_true_positives) + (
-            904 - len(list_of_groundtruth_images)) -
-                     (len(list_of_relevant_images) - len(list_of_true_positives))) / 904
+    if len(list_of_relevant_images) != 0:
+        precision = float(len(list_of_true_positives)) / len(list_of_relevant_images)
+    else:
+        precision = 0
+    if len(list_of_true_positives) != 0:
+        recall = float(len(list_of_true_positives)) / len(list_of_groundtruth_images)
+    else:
+        recall = 0
+    if (precision + recall) != 0:
+        f_measure = 2 * float(precision*recall) / (precision+recall)
+    else:
+        f_measure = 0
 
     precision = format(precision, '.4f')
     recall = format(recall, '.4f')
     f_measure = format(f_measure, '.4f')
-    accuracy = format(accuracy, '.4f')
 
     print "Precision: " + str(precision)
     print "Recall: " + str(recall)
     print "F-measure: " + str(f_measure)
-    print "Accuracy: " + str(accuracy)
 
     return float(precision), float(recall), float(f_measure)
 
@@ -331,7 +324,7 @@ def read_and_classify_images(net, transformer, feature, feat_vectors, svm_size):
     # read images and labels from disk
     print "Preparing and classifying images."
     # read text file with labels
-    images_filepaths = FileIO.read_csv('/home/zexe/disk1/Downloads/original_data/data_small/val.txt')   #returns list of tupels (file_path, label)
+    images_filepaths = FileIO.read_csv('/home/zexe/disk1/Downloads/original_data/data_p_c/complete.txt')   #returns list of tupels (file_path, label)
     # images_filepaths = FileIO.read_csv(
     #     '/home/zexe/disk1/Downloads/original_data/data_p_c/complete.txt')  # returns list of tupels (file_path, label)
     length = 1000
@@ -376,3 +369,24 @@ def postprocess_feature_vectors(feat_vectors):
     return feat_vectors
 
 
+def calc_average_accuracy(acc):
+    length = len(acc)
+
+    prec_sum = float(0)
+    rec_sum = float(0)
+    f_sum = float(0)
+    time_sum = float(0)
+    images_sum = 0
+
+    for (prec, rec, f_measure, time, images) in acc:
+        prec_sum += prec
+        rec_sum += rec
+        f_sum += f_measure
+        time_sum += float(time)
+        images_sum += images
+
+    prec_sum = prec_sum / length
+    rec_sum = rec_sum / length
+    f_sum = f_sum / length
+
+    return prec_sum, rec_sum, f_sum, time_sum, images_sum
