@@ -8,16 +8,15 @@ import Shot
 
 def main():
 
-    # read double videos
-    double_videos = FileIO.readDoubleVideos('double_elements.txt')
 
-    #create all
-    # create list of concepts
+    # create all
+    # # read double videos
+    # double_videos = FileIO.readDoubleVideos('double_elements.txt')
+    # # create list of concepts
     # ids = ['1267', '1005', '1015', '1261', '1031', '1010', '1006']
     # conceptsList = createConceptsList(ids, double_videos)
     # # create list of videos
     # createVideofiles(conceptsList)
-
 
     # or read them from csv
     conceptsList = FileIO.readConceptTxt('concepts.txt')
