@@ -26,8 +26,6 @@ def main():
     # create folders and move videofiles, also check for double videos and export them
     path = 'videodataset/'
     # createFolders(videofiles, path)
-    #extra line
-
 
 
     # shots = FileIO.read_shot_xmls()
@@ -35,7 +33,7 @@ def main():
     needed_shots = FileIO.read_selected_shots_from_file('shots.csv', conceptsList)
 
     ffmpeg_commands = createFFMPEGCommands(needed_shots, path)
-    FileIO.export_ffmpeg('ffmpeg_commands.txt', ffmpeg_commands)
+    FileIO.export_ffmpeg('videodataset/ffmpeg_commands.sh', ffmpeg_commands)
 
 
     print " "
@@ -94,11 +92,13 @@ def createFFMPEGCommands(needed_shots, path):
     commands = []
     videodirs = [name for name in os.listdir(path) if os.path.isdir(path + name)]
     for v in videodirs:
+        outputfilenumber = 0
         for shot in needed_shots.values():
             if v == shot.video:
                 commands.append('ffmpeg -ss ' + shot.timestamp + ' -i ' + \
                       shot.video + '/' + shot.video + '.mp4 -t 0.04 ' + \
-                      shot.video + '/%03d.jpg;')
+                      shot.video + '/' + str(outputfilenumber) + '.jpg;')
+                outputfilenumber += 1
 
     return commands
 
