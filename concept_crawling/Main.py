@@ -10,13 +10,14 @@ def main():
 
 
     # create all
-    # # read double videos
-    # double_videos = FileIO.readDoubleVideos('double_elements.txt')
-    # # create list of concepts
+    # read double videos
+    double_videos = FileIO.readDoubleVideos('double_elements.txt')
+    # create list of concepts
     # ids = ['1267', '1005', '1015', '1261', '1031', '1010', '1006']
-    # conceptsList = createConceptsList(ids, double_videos)
-    # # create list of videos
-    # createVideofiles(conceptsList)
+    ids = []
+    conceptsList = createConceptsList(ids, double_videos)
+    # create list of videos
+    createVideofiles(conceptsList)
 
     # or read them from csv
     conceptsList = FileIO.readConceptTxt('concepts.txt')
@@ -28,12 +29,12 @@ def main():
     # createFolders(videofiles, path)
 
 
-    # shots = FileIO.read_shot_xmls()
-    # FileIO.export_shots('shots.csv', shots)
+    shots = FileIO.read_shot_xmls()
+    FileIO.export_shots('shots.csv', shots)
     needed_shots = FileIO.read_selected_shots_from_file('shots.csv', conceptsList)
 
-    ffmpeg_commands = createFFMPEGCommands(needed_shots, path)
-    FileIO.export_ffmpeg('videodataset/ffmpeg_commands.sh', ffmpeg_commands)
+    # ffmpeg_commands = createFFMPEGCommands(needed_shots, path)
+    # FileIO.export_ffmpeg('videodataset/ffmpeg_commands.sh', ffmpeg_commands)
 
 
     print " "
@@ -58,7 +59,7 @@ def createConceptsList(ids, double_videos):
 
     print len(conceptsList.dictionary)
 
-    conceptsList = conceptsList.copyNConcepts(ids)
+    # conceptsList = conceptsList.copyNConcepts(ids)
 
     # write to csv file
     fileout = open('concepts.txt', 'w')
