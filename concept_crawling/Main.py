@@ -11,30 +11,30 @@ def main():
 
     # create all
     # read double videos
-    # double_videos = FileIO.readDoubleVideos('double_elements.txt')
+    double_videos = FileIO.readDoubleVideos('double_elements.txt')
     # # create list of concepts
     # # ids = ['1267', '1005', '1015', '1261', '1031', '1010', '1006']
-    # ids = []
-    # conceptsList = createConceptsList(ids, double_videos)
+    ids = []
+    conceptsList = createConceptsList(ids, double_videos)
     # # create list of videos
-    # createVideofiles(conceptsList)
+    createVideofiles(conceptsList)
     # # create shots
-    # shots = FileIO.read_shot_xmls()
-    # FileIO.export_shots('shots.csv', shots)
+    shots = FileIO.read_shot_xmls()
+    FileIO.export_shots('shots.csv', shots)
 
     # or read them from csv
-    conceptsList = FileIO.readConceptTxt('concepts.txt')
-    videofiles = FileIO.read_videofiles('needed_videos.txt')
-    needed_shots = FileIO.read_selected_shots_from_file('shots.csv', conceptsList)
+    # conceptsList = FileIO.readConceptTxt('concepts.txt')
+    # videofiles = FileIO.read_videofiles('needed_videos.txt')
+    # needed_shots = FileIO.read_selected_shots_from_file('shots.csv', conceptsList)
 
 
     # create folders and move videofiles, also check for double videos and export them
     path = 'videodataset/'
-    createFolders(videofiles, path)
+    # createFolders(videofiles, path)
 
 
-    ffmpeg_commands = createFFMPEGCommands(needed_shots, path)
-    FileIO.export_ffmpeg('videodataset/ffmpeg_commands.sh', ffmpeg_commands)
+    # ffmpeg_commands = createFFMPEGCommands(needed_shots, path)
+    # FileIO.export_ffmpeg('videodataset/ffmpeg_commands.sh', ffmpeg_commands)
 
 
     print " "
