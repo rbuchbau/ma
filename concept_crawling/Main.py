@@ -8,36 +8,43 @@ import Shot
 
 def main():
 
+    groundtruth_path = '../groundtruth/'
+    path = '../videodataset/'
 
-    # create all
+    # # create all
     # # read double videos
-    # double_videos = FileIO.readDoubleVideos('double_elements.txt')
-    # # # create list of concepts
-    # # # ids = ['1267', '1005', '1015', '1261', '1031', '1010', '1006']
-    # ids = []
-    # conceptsList = createConceptsList(ids, double_videos)
-    # # # create list of videos
-    # createVideofiles(conceptsList)
-    # # # create shots
+    # double_videos = FileIO.readDoubleVideos(groundtruth_path + 'double_elements.txt')
+    # # create list of concepts
+    # ids = ['1267', '1005', '1015', '1261', '1031', '1010', '1006']
+    # # ids = []
+    # conceptsList, conceptsList_all = createConceptsList(ids, double_videos)
+    # # create list of videos
+    # createVideofiles(conceptsList_all)
+    # # create shots
     # shots = FileIO.read_shot_xmls()
-    # FileIO.export_shots('shots.csv', shots)
+    # FileIO.export_shots(groundtruth_path + 'shots.csv', shots)
+
 
     # or read them from csv
-    groundtruth_path = '../groundtruth/'
     conceptsList = FileIO.readConceptTxt(groundtruth_path + 'concepts.txt')
+    conceptsList_all = FileIO.readConceptTxt(groundtruth_path + 'concepts_all.txt')
     videofiles = FileIO.read_videofiles(groundtruth_path + 'needed_videos.txt')
-    needed_shots = FileIO.read_selected_shots_from_file(groundtruth_path + 'shots.csv', conceptsList)
+    needed_shots = FileIO.read_selected_shots_from_file(groundtruth_path + 'shots.csv', conceptsList_all)
 
 
     # create folders and move videofiles, also check for double videos and export them
-    path = '../videodataset/'
     # createFolders(videofiles, path)
 
 
+    # # used to output the ffmpeg commands for shot extraction
     # ffmpeg_commands, shot_paths = createFFMPEGCommands(needed_shots, path)
     # FileIO.export_ffmpeg(path + 'ffmpeg_commands.sh', ffmpeg_commands)
-    # FileIO.export_shot_paths('shot_paths.txt', shot_paths)
+    # FileIO.export_shot_paths(groundtruth_path + 'shot_paths.txt', shot_paths)
 
+
+    for v in videofiles:
+        if not os.path.isdir('../videodataset/' + v.id):
+            print v.id
 
     print " "
 
@@ -46,29 +53,34 @@ def createConceptsList(ids, double_videos):
     time1 = timeit.default_timer()
 
     # read concepts from labels files
-    conceptsList = ConceptsList.ConceptsList()
-    conceptsList = FileIO.read_labels('groundtruths/labels.txt', conceptsList, double_videos)
-    conceptsList = FileIO.read_labels('groundtruths/labels2.txt', conceptsList, double_videos)
+    conceptsList_long = ConceptsList.ConceptsList()
+    conceptsList_long = FileIO.read_labels('groundtruths/labels.txt', conceptsList_long, double_videos)
+    conceptsList_long = FileIO.read_labels('groundtruths/labels2.txt', conceptsList_long, double_videos)
 
     time2 = timeit.default_timer()
     print "Time: " + str(time2 - time1) + " seconds"
 
 
     # sort concepts by occurences
-    conceptsList.sortList()
-    for c in conceptsList.concept_list:
+    conceptsList_long.sortList()
+    for c in conceptsList_long.concept_list:
         print c.name + ' ' + str(c.numberOfShots) + ' ' + str(len(c.videos))
 
-    print len(conceptsList.dictionary)
+    print len(conceptsList_long.dictionary)
 
-    # conceptsList = conceptsList.copyNConcepts(ids)
+    conceptsList = conceptsList_long.copyNConcepts(ids)
 
     # write to csv file
-    fileout = open('concepts.txt', 'w')
+    fileout = open('../groundtruth/concepts.txt', 'w')
     fileout.write(conceptsList.toString())
     fileout.close()
 
-    return conceptsList
+    # write to csv file
+    fileout = open('../groundtruth/concepts_all.txt', 'w')
+    fileout.write(conceptsList_long.toString())
+    fileout.close()
+
+    return conceptsList, conceptsList_long
 
 
 def createVideofiles(conceptsList):
@@ -80,7 +92,7 @@ def createVideofiles(conceptsList):
     # FileIO.export_videofilepaths('download_videofiles_selected.txt', videofiles)
 
     # write to csv file
-    FileIO.export_videofiles('needed_videos.txt', videofiles)
+    FileIO.export_videofiles('../groundtruth/needed_videos.txt', videofiles)
 
 
 def createFolders(videofiles, path):
