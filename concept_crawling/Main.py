@@ -17,7 +17,7 @@ def main():
     # # and metadata error videos
     # double_videos.extend(FileIO.read_metadata_error_files(groundtruth_path + 'metadata_error.txt'))
     # # create list of concepts
-    # ids = ['1267', '1005', '1015', '1261', '1031', '1010', '1006']
+    # ids = ['1267', '1015', '1261', '1031', '1010', '1006']
     # # ids = []
     # conceptsList, conceptsList_all = createConceptsList(ids, double_videos)
     # # create list of videos
