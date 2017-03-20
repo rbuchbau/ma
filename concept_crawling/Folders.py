@@ -27,9 +27,9 @@ def moveFiles(videolist, videos):
                 #         shutil.copy2('videodataset/' + v2.id + '/' + v2.id + '.mp4',
                 #                      'videodataset/' + v.id + '/' + v.id + '.mp4')
 
-    with open('double_elements.txt', 'w') as f:
-        for d in double_elements:
-            f.write(d.id + '\n')
-
-        f.close()
+    # with open('double_elements.txt', 'w') as f:
+    #     for d in double_elements:
+    #         f.write(d.id + '\n')
+    #
+    #     f.close()
 

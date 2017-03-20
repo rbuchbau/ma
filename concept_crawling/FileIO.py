@@ -259,3 +259,26 @@ def export_ffmpeg(filename, ffmpeg_commands):
             f.write(c + '\n')
 
         f.close()
+
+
+def export_shot_paths(filename, shot_paths):
+    with open(filename, 'w') as f:
+        for c in shot_paths:
+            f.write(c + '\n')
+
+        f.close()
+
+
+def read_shot_paths(filename):
+    shot_paths = []
+    with open(filename, 'r') as f:
+        line = f.readline()
+        while line != '':
+            splits = line.split('\n')
+            shot_paths.append(splits[0])
+            line = f.readline()
+
+        f.close()
+
+
+    return shot_paths

@@ -10,31 +10,32 @@ def main():
 
 
     # create all
-    # read double videos
-    double_videos = FileIO.readDoubleVideos('double_elements.txt')
-    # # create list of concepts
-    # # ids = ['1267', '1005', '1015', '1261', '1031', '1010', '1006']
-    ids = []
-    conceptsList = createConceptsList(ids, double_videos)
-    # # create list of videos
-    createVideofiles(conceptsList)
-    # # create shots
-    shots = FileIO.read_shot_xmls()
-    FileIO.export_shots('shots.csv', shots)
+    # # read double videos
+    # double_videos = FileIO.readDoubleVideos('double_elements.txt')
+    # # # create list of concepts
+    # # # ids = ['1267', '1005', '1015', '1261', '1031', '1010', '1006']
+    # ids = []
+    # conceptsList = createConceptsList(ids, double_videos)
+    # # # create list of videos
+    # createVideofiles(conceptsList)
+    # # # create shots
+    # shots = FileIO.read_shot_xmls()
+    # FileIO.export_shots('shots.csv', shots)
 
     # or read them from csv
-    # conceptsList = FileIO.readConceptTxt('concepts.txt')
-    # videofiles = FileIO.read_videofiles('needed_videos.txt')
-    # needed_shots = FileIO.read_selected_shots_from_file('shots.csv', conceptsList)
+    conceptsList = FileIO.readConceptTxt('concepts.txt')
+    videofiles = FileIO.read_videofiles('needed_videos.txt')
+    needed_shots = FileIO.read_selected_shots_from_file('shots.csv', conceptsList)
 
 
     # create folders and move videofiles, also check for double videos and export them
-    path = 'videodataset/'
-    # createFolders(videofiles, path)
+    path = '../videodataset/'
+    createFolders(videofiles, path)
 
 
-    # ffmpeg_commands = createFFMPEGCommands(needed_shots, path)
-    # FileIO.export_ffmpeg('videodataset/ffmpeg_commands.sh', ffmpeg_commands)
+    ffmpeg_commands, shot_paths = createFFMPEGCommands(needed_shots, path)
+    FileIO.export_ffmpeg(path + 'ffmpeg_commands.sh', ffmpeg_commands)
+    FileIO.export_shot_paths('shot_paths.txt', shot_paths)
 
 
     print " "
@@ -91,6 +92,7 @@ def createFolders(videofiles, path):
 
 def createFFMPEGCommands(needed_shots, path):
     commands = []
+    paths = []
     videodirs = [name for name in os.listdir(path) if os.path.isdir(path + name)]
     for v in videodirs:
         outputfilenumber = 0
@@ -99,9 +101,10 @@ def createFFMPEGCommands(needed_shots, path):
                 commands.append('ffmpeg -ss ' + shot.timestamp + ' -i ' + \
                       shot.video + '/' + shot.video + '.mp4 -t 0.04 ' + \
                       shot.video + '/' + str(outputfilenumber) + '.jpg;')
+                paths.append(shot.video + '/' + str(outputfilenumber) + '.jpg')
                 outputfilenumber += 1
 
-    return commands
+    return commands, paths
 
 
 if __name__ == '__main__':
