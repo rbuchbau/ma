@@ -116,7 +116,9 @@ def createFFMPEGCommands(needed_shots, path):
                 commands.append('ffmpeg -ss ' + shot.timestamp + ' -i ' + \
                       shot.video + '/' + shot.video + '.mp4 -t 0.04 ' + \
                       shot.video + '/' + str(outputfilenumber) + '.jpg;')
-                paths.append(shot.video + '/' + str(outputfilenumber) + '.jpg')
+
+                paths.append(shot.video + '/' + str(outputfilenumber) + '.jpg' +
+                             ' ' + shot.name)
                 outputfilenumber += 1
 
     return commands, paths

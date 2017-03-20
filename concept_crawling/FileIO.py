@@ -181,6 +181,8 @@ def export_shots(filename, shots):
 
 def read_shots_from_file(filename):
     shots = {}
+    shot_paths = read_shot_paths('../groundtruth/shot_paths.txt')
+    i = 0
     with open(filename, 'r') as f:
         # alllines = f.readlines()
         line = f.readline()
@@ -188,7 +190,10 @@ def read_shots_from_file(filename):
             splits = line.split(' ')
             if len(splits) > 0:
                 shot = Shot.Shot(splits[0], splits[1].split('\n')[0], False)
+                # print i
+                # shot.shot_path = shot_paths[i]
                 shots[shot.name] = shot
+                i += 1
             line = f.readline()
 
         f.close()

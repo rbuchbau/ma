@@ -2,14 +2,15 @@
 import numpy as np
 import sys
 
-from blaze.server.client import post
+# from blaze.server.client import post
 
 import FileIO
 from sklearn.svm import SVC
 from sklearn.externals import joblib
 from sklearn.preprocessing import StandardScaler
 caffe_root = '/home/zexe/caffe/'
-ffmpeg_root ='/home/zexe/disk1/Downloads/ffmpeg_video/'
+# ffmpeg_root ='/home/zexe/disk1/Downloads/ffmpeg_video/'
+ffmpeg_root ='/home/zexe/PycharmProjects/ma/videodataset/'
 sys.path.insert(0, caffe_root + 'python')
 sys.path.append('/home/zexe/caffe/python')
 import caffe
@@ -135,14 +136,14 @@ def init_caffe_net(model):
     # plt.rcparams['image.interpolation'] = 'nearest'  # don't interpolate: show square pixels
     # plt.rcparams['image.cmap'] = 'gray'  # use grayscale output rather than a (potentially misleading) color heatmap
 
-    model_def = caffe_root + 'new2/models/' + model + '/deploy.prototxt'
-    model_weights = caffe_root + 'new2/models/' + model + '/' + model + '.caffemodel'
+    model_def = caffe_root + 'new2/models/new/' + model + '/deploy.prototxt'
+    model_weights = caffe_root + 'new2/models/new/' + model + '/' + model + '.caffemodel'
 
     net = caffe.Net(model_def, model_weights, caffe.TEST)
 
     # load the mean ImageNet image (as distributed with Caffe) for subtraction
     mu = np.load(
-        caffe_root + 'new2/models/' + model + '/mean.npy')  # average over pixels to obtain the mean (BGR) pixel values
+        caffe_root + 'new2/models/new/' + model + '/mean.npy')  # average over pixels to obtain the mean (BGR) pixel values
     mu = mu.mean(1).mean(1)
 
     # create transformer for the input called 'data'
@@ -201,6 +202,38 @@ def classify(net, feature, all_images, feat_vectors, index=0):
     return feat_vectors
 
 
+def classify(net, feature, all_images, feat_vectors, index=0):
+
+    caffe.set_device(0)
+    caffe.set_mode_gpu()
+
+    # feat_vectors = []
+
+    for i, (img, shot_path) in enumerate(all_images):
+        # copy the image data into the memory allocated for the net
+        net.blobs['data'].data[...] = img
+
+        output = net.forward()
+
+        output_prob = output['prob'][0]  # the output probability vector for the first image in the batch
+        print 'predicted class for ' + shot_path + ' is:', output_prob.argmax()
+        # load ImageNet labels
+        labels_file = caffe_root + 'new2/models/new/alexnet_p_c_3/synset_words.txt'
+        labels = np.loadtxt(labels_file, str, delimiter='\t')
+        print 'output label:', labels[output_prob.argmax()]
+
+        # get features of one layer
+        # feat = net.blobs[feature].data[0]
+        # feat = feat.flat
+        # feat_vectors.append(np.array(feat[:]))
+
+        if i % 1000 == 0:
+            print "Classified " + str(index + i) + " images."
+
+    # return feat_vectors
+    return
+
+
 def read_images_and_labels(transformer, data, labels, offset, length):
     all_images = []
     file_paths = []
@@ -229,26 +262,48 @@ def read_images_and_labels(transformer, data, labels, offset, length):
     return all_images
 
 
-def load_images_to_classify(transformer, duration, video):
+# def load_images_to_classify(transformer, duration, video):
+#     all_images = []
+#
+#     # get number of files in directory
+#     path = ffmpeg_root + video + '/' + duration + '/'
+#     num_files = len([f for f in os.listdir(path)
+#                      if os.path.isfile(os.path.join(path, f))]) - 1
+#
+#     # load and preprocess all image files
+#     for i in range(1, num_files):
+#         image = caffe.io.load_image(ffmpeg_root + video + '/' + duration + '/' + str(i) + '.jpg')
+#         transformed_image = transformer.preprocess('data', image)
+#         all_images.append(transformed_image)
+#
+#         if i % 1000 == 0:
+#             print "Read " + str(i) + " images."
+#
+#     print "Read all images."
+#     # plt.imshow(image)
+#     # plt.show()
+#
+#     return all_images
+
+def load_images_to_classify(transformer, shot_paths):
     all_images = []
 
     # get number of files in directory
-    path = ffmpeg_root + video + '/' + duration + '/'
+    path = ffmpeg_root
     num_files = len([f for f in os.listdir(path)
                      if os.path.isfile(os.path.join(path, f))]) - 1
 
     # load and preprocess all image files
-    for i in range(1, num_files):
-        image = caffe.io.load_image(ffmpeg_root + video + '/' + duration + '/' + str(i) + '.jpg')
+    for i, shot_path in enumerate(shot_paths):
+        image = caffe.io.load_image(path + shot_path)
         transformed_image = transformer.preprocess('data', image)
-        all_images.append(transformed_image)
+        all_images.append( (transformed_image, shot_path))
 
         if i % 1000 == 0:
             print "Read " + str(i) + " images."
 
+
     print "Read all images."
-    # plt.imshow(image)
-    # plt.show()
 
     return all_images
 
@@ -268,7 +323,59 @@ def get_labels(video, filename='groundtruths/labels.txt'):
     return labels
 
 
-def calc_accuracy(predicted_labels, filename_csv, video):
+# def calc_accuracy(predicted_labels, filename_csv, video):
+#     #for prec, recall, ... calculation
+#     ground_truth = FileIO.read_groundtruth(filename_csv)
+#     labels = get_labels(video)
+#
+#     list_of_groundtruth_images = []
+#
+#     #refactor groundtruth
+#     for (a,b) in ground_truth:
+#         for i in range(a,b+1):
+#             list_of_groundtruth_images.append(i)
+#
+#     list_of_relevant_images = []
+#
+#     for i, label in enumerate(predicted_labels):
+#         if label in labels:
+#             list_of_relevant_images.append(i + 1)
+#
+#     list_of_true_positives = []
+#
+#     for ri in list_of_relevant_images:
+#         if ri in list_of_groundtruth_images:
+#             list_of_true_positives.append(ri)
+#
+#     print str(len(list_of_groundtruth_images))
+#     print str(len(list_of_relevant_images))
+#     print str(len(list_of_true_positives))
+#
+#     if len(list_of_relevant_images) != 0:
+#         precision = float(len(list_of_true_positives)) / len(list_of_relevant_images)
+#     else:
+#         precision = 0
+#     if len(list_of_true_positives) != 0:
+#         recall = float(len(list_of_true_positives)) / len(list_of_groundtruth_images)
+#     else:
+#         recall = 0
+#     if (precision + recall) != 0:
+#         f_measure = 2 * float(precision*recall) / (precision+recall)
+#     else:
+#         f_measure = 0
+#
+#     precision = format(precision, '.4f')
+#     recall = format(recall, '.4f')
+#     f_measure = format(f_measure, '.4f')
+#
+#     print "Precision: " + str(precision)
+#     print "Recall: " + str(recall)
+#     print "F-measure: " + str(f_measure)
+#
+#     return float(precision), float(recall), float(f_measure
+
+
+def calc_accuracy(predicted_labels, filename_csv, video, conceptsList):
     #for prec, recall, ... calculation
     ground_truth = FileIO.read_groundtruth(filename_csv)
     labels = get_labels(video)
