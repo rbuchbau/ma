@@ -23,19 +23,20 @@ def main():
     # FileIO.export_shots('shots.csv', shots)
 
     # or read them from csv
-    conceptsList = FileIO.readConceptTxt('concepts.txt')
-    videofiles = FileIO.read_videofiles('needed_videos.txt')
-    needed_shots = FileIO.read_selected_shots_from_file('shots.csv', conceptsList)
+    groundtruth_path = '../groundtruth/'
+    conceptsList = FileIO.readConceptTxt(groundtruth_path + 'concepts.txt')
+    videofiles = FileIO.read_videofiles(groundtruth_path + 'needed_videos.txt')
+    needed_shots = FileIO.read_selected_shots_from_file(groundtruth_path + 'shots.csv', conceptsList)
 
 
     # create folders and move videofiles, also check for double videos and export them
     path = '../videodataset/'
-    createFolders(videofiles, path)
+    # createFolders(videofiles, path)
 
 
-    ffmpeg_commands, shot_paths = createFFMPEGCommands(needed_shots, path)
-    FileIO.export_ffmpeg(path + 'ffmpeg_commands.sh', ffmpeg_commands)
-    FileIO.export_shot_paths('shot_paths.txt', shot_paths)
+    # ffmpeg_commands, shot_paths = createFFMPEGCommands(needed_shots, path)
+    # FileIO.export_ffmpeg(path + 'ffmpeg_commands.sh', ffmpeg_commands)
+    # FileIO.export_shot_paths('shot_paths.txt', shot_paths)
 
 
     print " "
