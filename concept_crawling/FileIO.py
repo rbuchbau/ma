@@ -280,5 +280,25 @@ def read_shot_paths(filename):
 
         f.close()
 
-
     return shot_paths
+
+
+def export_metadata_error_files(filename, videofiles):
+    with open(filename, 'w') as f:
+        for v in videofiles:
+            if not os.path.isdir('../videodataset/' + v.id):
+                f.write(v.id + '\n')
+
+        f.close()
+
+
+def read_metadata_error_files(filename):
+    data = []
+    with open(filename, 'r') as f:
+        alllines = f.readlines()
+        for line in alllines:
+            data.append(line.split('\n')[0])
+
+        f.close()
+
+    return data
