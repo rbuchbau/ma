@@ -6,6 +6,7 @@ import ConceptsList
 import VideoFile
 import os
 import Shot
+import ShotPath
 
 
 # read ground-truth
@@ -279,8 +280,13 @@ def read_shot_paths(filename):
     with open(filename, 'r') as f:
         line = f.readline()
         while line != '':
-            splits = line.split('\n')
-            shot_paths.append(splits[0])
+            splits2 = line.split('\n')
+            splits = splits2[0].split(' ')
+            shot_path = ShotPath.ShotPath()
+            shot_path.path = splits[0]
+            shot_path.name = splits[1]
+
+            shot_paths.append(shot_path)
             line = f.readline()
 
         f.close()

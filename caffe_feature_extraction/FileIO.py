@@ -85,3 +85,12 @@ def write_times(filename, time, svm_size, kernel):
     with open(filename, 'a') as f:
         f.write(kernel + "," + str(svm_size) + "," + str(time) + "\n")
         f.close()
+
+
+def write_accuracies(all_concepts, model):
+    path = 'acc_results/'
+    with open(path + model + '.txt', 'w') as f:
+        for concept_measurement in all_concepts.values():
+                f.write(concept_measurement.toString() + '\n')
+
+        f.close()

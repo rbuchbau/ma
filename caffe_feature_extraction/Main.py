@@ -3,7 +3,7 @@
 
 import Feature_Extraction as Fe
 import FileIO
-import concept_crawling as cc
+from concept_crawling import FileIO as ccFileIO
 
 
 def main():
@@ -59,52 +59,50 @@ def main():
     # NEW
 
     groundtruth_path = '../groundtruth/'
-    # models = ['alexnet_p', 'alexnet_p_c', 'alexnet_p_without_weights', 'alexnet_p_c_without_weights']
-    models = ['alexnet_p']
+    models = ['alexnet_p', 'alexnet_p_c', 'alexnet_p_without_weights', 'alexnet_p_c_without_weights']
+    # models = ['alexnet_p']
     # or read them from csv
-    conceptsList = cc.FileIO.readConceptTxt(groundtruth_path + 'concepts.txt')
-    conceptsList_all = cc.FileIO.readConceptTxt(groundtruth_path + 'concepts_all.txt')
-    videofiles = cc.FileIO.read_videofiles(groundtruth_path + 'needed_videos.txt')
-    needed_shots = cc.FileIO.read_selected_shots_from_file(groundtruth_path + 'shots.csv', conceptsList_all)
-    shot_paths = cc.FileIO.read_shot_paths(groundtruth_path + 'shot_paths.txt')
+    conceptsList = ccFileIO.readConceptTxt(groundtruth_path + 'concepts.txt')
+    conceptsList_all = ccFileIO.readConceptTxt(groundtruth_path + 'concepts_all.txt')
+    videofiles = ccFileIO.read_videofiles(groundtruth_path + 'needed_videos.txt')
+    needed_shots = ccFileIO.read_selected_shots_from_file(groundtruth_path + 'shots.csv', conceptsList_all)
+    shot_paths = ccFileIO.read_shot_paths(groundtruth_path + 'shot_paths.txt')
 
     all_infos = (conceptsList, conceptsList_all, videofiles, needed_shots, shot_paths)
 
+    # 1267 forest <-> 75 tree
+    # 1015 boat / ship <-> 13 boat
+    # 1261 flags <-> 24 flag
+    # 1031 computers <-> 21 computer
+    # 1010 beach <-> 64 beach
+    # 1006 animal <-> 0 animal
+
+    mapp = {'75': '1267', '13': '1015', '24': '1261', '21': '1031', '64': '1010', '0': '1006'}
+
     for m in models:
-
         # convert model mean from .binaryproto to .npy (needs only be done once for each model
-        Fe.convert_binaryproto_to_npy(model)
+        Fe.convert_binaryproto_to_npy(m)
 
-        # convert groundtruth from 0.5secs intervall (manual input) to usable intervals (1,2,3,4,5secs)
-        # FileIO.convert_groundtruths(videos)
-
-        acc_values = load_and_use_model(m, all_infos)
-        info = m
-        FileIO.write_accuracy('../results/acc_results/' + info + '.csv', acc_values, info)
+        acc_values = load_and_use_model(m, all_infos, mapp)
 
 
-def load_and_use_model(model, all_infos):
-    # all_infos: (conceptsList, conceptsList_all, videofiles, needed_shots, shot_paths)
+def load_and_use_model(model, all_infos, mapp):
     acc_values = []
+    (conceptsList, conceptsList_all, videofiles, needed_shots, shot_paths) = all_infos
 
     #init caffe net
-    net, transformer = init_caffe_net(model)
+    net, transformer = Fe.init_caffe_net(model)
     #read images to classify from folder
-    print "Preparing images."
-    all_images = Fe.load_images_to_classify(transformer, all_infos[4])
+    print "Preparing images for model " + model
+    all_images = Fe.load_images_to_classify(transformer, shot_paths)
 
     # perform classification
-    print "Classifying."
-    feat_vectors = []
-    Fe.classify(net, [], all_images, feat_vectors)
+    print "Classifying for model " + model
+    predicted_labels = Fe.classify(net, all_images, model, conceptsList, mapp, needed_shots)
 
-    print "Calculating evaluation parameters."
-    acc_values = Fe.calc_accuracy(predicted_labels, video + '/groundtruth_' + video + '_' + duration + '.csv', video, all_infos[0])
-    (p, r, f) = acc_values
-    acc_values2 = (p, r, f, time, len(X_test_scaled))
-
-
-
+    print "Calculating evaluation parameters for model " + model
+    acc_values_for_all_concepts = Fe.calc_accuracy(predicted_labels, model, conceptsList, mapp)
+    FileIO.write_accuracies(acc_values_for_all_concepts, model)
 
     return acc_values
 
