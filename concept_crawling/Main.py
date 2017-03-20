@@ -15,7 +15,7 @@ def main():
     # # read double videos
     # double_videos = FileIO.readDoubleVideos(groundtruth_path + 'double_elements.txt')
     # # and metadata error videos
-    # double_videos.append(FileIO.read_metadata_error_files())
+    # double_videos.extend(FileIO.read_metadata_error_files(groundtruth_path + 'metadata_error.txt'))
     # # create list of concepts
     # ids = ['1267', '1005', '1015', '1261', '1031', '1010', '1006']
     # # ids = []
@@ -45,7 +45,7 @@ def main():
 
 
     # some videos were not downloaded because of metadata errors, export them for removal
-    FileIO.export_metadata_error_files(groundtruth_path + 'metadata_error.txt', videofiles)
+    # FileIO.export_metadata_error_files(groundtruth_path + 'metadata_error.txt', videofiles)
 
 
     print " "
