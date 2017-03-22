@@ -66,7 +66,7 @@ def train_and_save_svm(svm_path, model, feature, kernel, svm_size, save):
 
     time = format(timeit.default_timer() - s_time, '.4f')
     print "Time for training: " + str(time) + " seconds."
-    FileIO.write_times('training_times/svm_training_times.csv', time, svm_size, kernel)
+    FileIO.write_times('training_times/svm_training_times.csv', time, model, feature)
 
     #save svm to file
     joblib.dump(clf, svm_path)

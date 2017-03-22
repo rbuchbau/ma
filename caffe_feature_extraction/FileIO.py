@@ -81,9 +81,9 @@ def convert_groundtruths(videos):
         convert_groundtruth(data, video_name + '_5secs.csv', 10)
 
 
-def write_times(filename, time, svm_size, kernel):
+def write_times(filename, time, model, feature):
     with open(filename, 'a') as f:
-        f.write(kernel + "," + str(svm_size) + "," + str(time) + "\n")
+        f.write(model + "_" + str(feature) + "," + str(time) + "\n")
         f.close()
 
 
