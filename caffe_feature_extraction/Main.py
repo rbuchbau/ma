@@ -7,11 +7,13 @@ from concept_crawling import FileIO as ccFileIO
 
 
 def main():
+    models = ['alexnet_p', 'alexnet_p_c', 'alexnet_p_without_weights', 'alexnet_p_c_without_weights']
 
     svm()
 
     # NEW
-    model()
+    # model(models)
+    FileIO.read_accuracies_and_average_them('acc_results/', models)
 
 
 def svm():
@@ -67,7 +69,6 @@ def svm():
 
 def model():
     groundtruth_path = '../groundtruth/'
-    models = ['alexnet_p', 'alexnet_p_c', 'alexnet_p_without_weights', 'alexnet_p_c_without_weights']
     # models = ['alexnet_p']
     # or read them from csv
     conceptsList = ccFileIO.readConceptTxt(groundtruth_path + 'concepts.txt')

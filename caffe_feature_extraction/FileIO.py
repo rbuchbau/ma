@@ -1,5 +1,6 @@
 import csv
 import math
+import ConceptMeasurements
 
 #read ground-truth
 def read_groundtruth(filename):
@@ -94,3 +95,34 @@ def write_accuracies(all_concepts, model):
                 f.write(concept_measurement.toString() + '\n')
 
         f.close()
+
+
+def read_accuracies_and_average_them(filepath, models):
+    lengths = (0, 0, 0)
+    acc_average = (0.0, 0.0, 0.0)
+
+    for model in models:
+        with open(filepath + model + '.txt', 'r') as f:      #open file for reading
+            reader = csv.reader(f, delimiter=' ')
+            for line in reader:
+                if len(line) == 7:
+                    # name = line[0]
+                    # precision = line[1]
+                    # recall = line[2]
+                    # f_measure = line[3]
+
+                    lengths[0] += line[4]
+                    lengths[1] += line[5]
+                    lengths[2] += line[6]
+
+                    print "a"
+
+
+
+
+            f.close()
+
+    print "a"
+
+
+
