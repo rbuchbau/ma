@@ -25,12 +25,12 @@ def train_and_save_svm(svm_path, model, feature, kernel, svm_size, save):
     #init caffe net
     net, transformer = init_caffe_net(model)
 
-    feat_vectors = []
+    # feat_vectors = []
 
     if save:
         #either compute feature vectors and write them
         # labels = read_and_classify_imagenet_images(net, transformer, feature, feat_vectors, svm_size)
-        labels, feat_vectors = read_and_classify_imagenet_images(net, transformer, feature, feat_vectors)
+        labels, feat_vectors = read_and_classify_imagenet_images(net, transformer, feature)
         # write feature vectors
         print "Writing feature vectors to file."
         np.savetxt('feature_vectors_training/' + feature + '.csv', labels)
@@ -196,7 +196,7 @@ def classify_for_svm(net, feature, all_images, feat_vectors, index=0):
 
     feat_vectors = []
 
-    for i, (img, shot_path) in enumerate(all_images):
+    for i, img in enumerate(all_images):
         # copy the image data into the memory allocated for the net
         net.blobs['data'].data[...] = img
 
@@ -248,6 +248,7 @@ def read_images_and_labels(transformer, data, labels, offset, length):
     file_paths = []
 
     # labels = []
+    error_number = 0
 
     for i, (fp, label) in enumerate(data):
         if offset <= i < (offset+length):
@@ -256,11 +257,12 @@ def read_images_and_labels(transformer, data, labels, offset, length):
 
     for i, fp in enumerate(file_paths):
         try:
-            image = caffe.io.load_image('/home/zexe/disk1/Downloads/original_data/' + fp)
+            image = caffe.io.load_image('/home/zexe/' + fp)
             transformed_image = transformer.preprocess('data', image)
             all_images.append(transformed_image)
         except:
-            print "Error reading image (Probably not an image)."
+            print "Error reading image (Probably not an image). # " + str(error_number)
+            error_number += 1
 
         if i % 1000 == 0:
             print "Read " + str(offset + i) + " images."
@@ -412,11 +414,14 @@ def calc_accuracy(predicted_labels, model, conceptsList, mapp):
     return all_concepts
 
 
-def read_and_classify_imagenet_images(net, transformer, feature, feat_vectors, svm_size):
+def read_and_classify_imagenet_images(net, transformer, feature):
+    svm_size = 25000
     # read images and labels from disk
     print "Preparing and classifying images."
     # read text file with labels
-    images_filepaths = FileIO.read_csv('/home/zexe/disk1/Downloads/original_data/data_p/complete.txt')   #returns list of tupels (file_path, label)
+    image_tuples = FileIO.read_csv(
+        '/home/zexe/disk1/Downloads/original_data/data_p/train_svm.txt')  # returns list of tupels (file_path, label)
+
     length = 1000
     labels = []
 
@@ -424,7 +429,7 @@ def read_and_classify_imagenet_images(net, transformer, feature, feat_vectors, s
 
 
     for offset in range(0 / length, svm_size / length):
-        all_images = read_images_and_labels(transformer, images_filepaths, labels, offset * length, length)
+        all_images = read_images_and_labels(transformer, image_tuples, labels, offset * length, length)
         # all_images, labels = read_images_and_labels(transformer, images_filepaths, [], offset * length, length)
 
         # feat_vectors = classify(net, feature, all_images, offset * length)
@@ -433,27 +438,27 @@ def read_and_classify_imagenet_images(net, transformer, feature, feat_vectors, s
     return labels, feat_vectors
 
 
-def calc_average_accuracy(acc):
-    length = len(acc)
-
-    prec_sum = float(0)
-    rec_sum = float(0)
-    f_sum = float(0)
-    time_sum = float(0)
-    images_sum = 0
-
-    for (prec, rec, f_measure, time, images) in acc:
-        prec_sum += prec
-        rec_sum += rec
-        f_sum += f_measure
-        time_sum += float(time)
-        images_sum += images
-
-    prec_sum = prec_sum / length
-    rec_sum = rec_sum / length
-    f_sum = f_sum / length
-
-    return prec_sum, rec_sum, f_sum, time_sum, images_sum
+# def calc_average_accuracy(acc):
+#     length = len(acc)
+#
+#     prec_sum = float(0)
+#     rec_sum = float(0)
+#     f_sum = float(0)
+#     time_sum = float(0)
+#     images_sum = 0
+#
+#     for (prec, rec, f_measure, time, images) in acc:
+#         prec_sum += prec
+#         rec_sum += rec
+#         f_sum += f_measure
+#         time_sum += float(time)
+#         images_sum += images
+#
+#     prec_sum = prec_sum / length
+#     rec_sum = rec_sum / length
+#     f_sum = f_sum / length
+#
+#     return prec_sum, rec_sum, f_sum, time_sum, images_sum
 
 
 

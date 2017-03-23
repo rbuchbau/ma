@@ -13,7 +13,7 @@ def main():
 
     # NEW
     # model(models)
-    FileIO.read_accuracies_and_average_them('acc_results/', models)
+    # FileIO.write_average_accuracies('acc_results_avgs/acc_results.txt', models)
 
 
 def svm():
