@@ -85,13 +85,13 @@ def convert_groundtruths(videos):
 
 def write_times(filename, time, model, feature):
     with open(filename, 'a') as f:
-        f.write(model + "_" + str(feature) + "," + str(time) + "\n")
+        f.write(model + "_" + str(feature) + " " + str(time) + "\n")
         f.close()
 
 
-def write_accuracies(all_concepts, model):
+def write_accuracies(all_concepts, filename):
     path = 'acc_results/'
-    with open(path + model + '.txt', 'w') as f:
+    with open(path + filename + '.txt', 'w') as f:
         for concept_measurement in all_concepts.values():
             f.write(concept_measurement.toString() + '\n')
 

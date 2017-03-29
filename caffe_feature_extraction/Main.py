@@ -8,66 +8,32 @@ from concept_crawling import FileIO as ccFileIO
 
 def main():
     models = ['alexnet_p', 'alexnet_p_c', 'alexnet_p_without_weights', 'alexnet_p_c_without_weights']
+    # models = ['alexnet_p_without_weights', 'alexnet_p_c_without_weights']
+    # models = ['alexnet_p']
 
-    svm()
+    svm(models)
 
     # NEW
     # model(models)
+
     # FileIO.write_average_accuracies('acc_results_avgs/acc_results.txt', models)
 
 
-def svm():
-    models = ['alexnet_p']
-    # duration = '2secs'
-    # durations = ['05secs', '1secs', '2secs', '3secs', '4secs', '5secs']
-    feature = 'fc7'
-    kernels = ['rbf']
-    # kernels = ['rbf', 'linear', 'poly']
-    # filename = '' + model + '_' + duration + '_' + feature
-    # svm_suffix = '_25000'
-    svm_s = [25000]
-    # svm_s = [25000, 50000]
-    # svm_s = [10000]
-    # videos = ['1001', '1004', '1005', '1007', '1009', '1012', '1016', '1017', '1049', '1059']
-    # videos = ['1005', '1059']
+def svm(models):
+    features = ['fc6', 'fc7']
+    kernel = 'rbf'
 
     #convert model mean from .binaryproto to .npy (needs only be done once for each model
     # Fe.convert_binaryproto_to_npy(model)
 
-    #convert groundtruth from 0.5secs intervall (manual input) to usable intervals (1,2,3,4,5secs)
-    # FileIO.convert_groundtruths(videos)
-
-    # #train svm
-    for model in models:
-        filename = '' + model + '_' + feature
-        for kernel in kernels:
-            for svm_size in svm_s:
-                # svm_path = 'svms/' + feature + '/' + kernel + '/svm_' + kernel + '_' + filename + '_' \
-                #            + str(svm_size) + '/svm_' + kernel + '_' + filename + '_' + str(svm_size) + '.pkl'
-
-                svm_path = 'svms/' + filename + '.pkl'
-
-                #train svm
-                Fe.train_and_save_svm(svm_path, model, feature, kernel, svm_size, True)
+    #train svm
+    # train_svm(models, features, kernel)
 
     # use svm
-    # for kernel in kernels:
-    #     for duration in durations:
-    #         for svm_size in svm_s:
-    #             acc = []
-    #             info = feature + '_' + kernel + '_' + duration + '_' + str(svm_size)
-    #             svm_path = 'svms/' + feature + '/' + kernel + '/svm_' + kernel + '_' + filename + '_' \
-    #                        + str(svm_size) + '/svm_' + kernel + '_' + filename + '_' + str(svm_size) + '.pkl'
-    #             for v in videos:
-    #                 use svm
-                    # acc_values = Fe.load_and_use_svm(svm_path, model, duration, feature, v, svm_size, False)
-                    # FileIO.write_accuracy('acc_results/' + info + '.csv', acc_values, info)
-                    # acc.append(acc_values[:])
-                # avg_acc_values = Fe.calc_average_accuracy(acc)
-                # FileIO.write_accuracy('acc_results_avgs/results.csv', avg_acc_values, info)
+    use_svm(models, features)
 
 
-def model():
+def model(models):
     groundtruth_path = '../groundtruth/'
     # models = ['alexnet_p']
     # or read them from csv
@@ -88,35 +54,85 @@ def model():
 
     mapp = {'75': '1267', '13': '1015', '24': '1261', '21': '1031', '64': '1010', '0': '1006'}
 
-    for m in models:
+    for model in models:
         # convert model mean from .binaryproto to .npy (needs only be done once for each model
-        Fe.convert_binaryproto_to_npy(m)
+        # Fe.convert_binaryproto_to_npy(m)
 
-        acc_values = load_and_use_model(m, all_infos, mapp)
+        acc_values_for_all_concepts = Fe.load_and_use_model(model, all_infos, mapp)
+        FileIO.write_accuracies(acc_values_for_all_concepts, model)
 
 
-def load_and_use_model(model, all_infos, mapp):
+
+def train_svm(models, features, kernel):
+    for model in models:
+        for feature in features:
+            filename = '' + model + '_' + feature
+            # svm_path = 'svms/' + feature + '/' + kernel + '/svm_' + kernel + '_' + filename + '_' \
+            #            + str(svm_size) + '/svm_' + kernel + '_' + filename + '_' + str(svm_size) + '.pkl'
+
+            svm_path = 'svms/' + filename + '.pkl'
+
+            #train svm
+            Fe.train_and_save_svm(svm_path, model, feature, kernel, True)
+
+
+# def use_svm(model, features, kernel):
+def use_svm(models, features):
+    # for feature in features:
+    #     acc = []
+    #     # info = feature + '_' + kernel + '_' + duration + '_' + str(svm_size)
+    #     # svm_path = 'svms/' + feature + '/' + kernel + '/svm_' + kernel + '_' + filename + '_' \
+    #     #            + str(svm_size) + '/svm_' + kernel + '_' + filename + '_' + str(svm_size) + '.pkl'
+    #
+    #     filename = '' + model + '_' + feature
+    #     svm_path = 'svms/' + filename + '.pkl'
+    #     # for v in videos:
+    #         # use svm
+    #     acc_values = Fe.load_and_use_svm(svm_path, model, feature, False)
+    #     FileIO.write_accuracy('acc_results/' + filename + '_svm.csv', acc_values)
+    #     acc.append(acc_values[:])
+    #     avg_acc_values = Fe.calc_average_accuracy(acc)
+    #     FileIO.write_accuracy('acc_results_avgs/results.csv', avg_acc_values, info)
+
+    groundtruth_path = '../groundtruth/'
+
+    conceptsList = ccFileIO.readConceptTxt(groundtruth_path + 'concepts.txt')
+    conceptsList_all = ccFileIO.readConceptTxt(groundtruth_path + 'concepts_all.txt')
+    videofiles = ccFileIO.read_videofiles(groundtruth_path + 'needed_videos.txt')
+    needed_shots = ccFileIO.read_selected_shots_from_file(groundtruth_path + 'shots.csv', conceptsList_all)
+    shot_paths = ccFileIO.read_shot_paths(groundtruth_path + 'shot_paths.txt')
+
     acc_values = []
-    (conceptsList, conceptsList_all, videofiles, needed_shots, shot_paths) = all_infos
+    all_infos = (conceptsList, conceptsList_all, videofiles, needed_shots, shot_paths)
 
-    #init caffe net
-    net, transformer = Fe.init_caffe_net(model)
-    #read images to classify from folder
-    print "Preparing images for model " + model
-    all_images = Fe.load_images_to_classify(transformer, shot_paths)
+    mapp = {'75': '1267', '13': '1015', '24': '1261', '21': '1031', '64': '1010', '0': '1006'}
 
-    # perform classification
-    print "Classifying for model " + model
-    predicted_labels = Fe.classify(net, all_images, model, conceptsList, mapp, needed_shots)
-
-    print "Calculating evaluation parameters for model " + model
-    acc_values_for_all_concepts = Fe.calc_accuracy(predicted_labels, model, conceptsList, mapp)
-    FileIO.write_accuracies(acc_values_for_all_concepts, model)
-
-    return acc_values
+    for model in models:
+        for feature in features:
+            acc_values_for_all_concepts = Fe.load_and_use_svm(model, feature, all_infos, mapp, True)
+            FileIO.write_accuracies(acc_values_for_all_concepts, model + '_' + feature)
 
 
-
+# def load_and_use_model_svm(model, feature, all_infos, mapp):
+    # acc_values = []
+    # feat_vectors = []
+    # (conceptsList, conceptsList_all, videofiles, needed_shots, shot_paths) = all_infos
+    #
+    # #init caffe net
+    # net, transformer = Fe.init_caffe_net(model)
+    # #read images to classify from folder
+    # print "Preparing images for model " + model
+    # all_images = Fe.load_images_to_classify(transformer, shot_paths)
+    #
+    # # perform classification
+    # print "Classifying for model " + model
+    # predicted_labels = Fe.classify_for_svm(net, all_images, feature, feat_vectors)
+    #
+    # print "Calculating evaluation parameters for model " + model
+    # acc_values_for_all_concepts = Fe.calc_accuracy(predicted_labels, model, conceptsList, mapp)
+    # FileIO.write_accuracies(acc_values_for_all_concepts, model)
+    #
+    # return acc_values
 
 
 

@@ -1,0 +1,9 @@
+alexnet_p_fc6,3122.0503
+alexnet_p_fc7,1310.5526
+alexnet_p_c_fc6,3543.4026
+alexnet_p_c_fc7,1666.4866
+alexnet_p_without_weights_fc6,3274.6267
+alexnet_p_without_weights_fc6,3418.8164
+alexnet_p_without_weights_fc7,1378.4882
+alexnet_p_c_without_weights_fc6,3602.1171
+alexnet_p_c_without_weights_fc7,1487.4236
