@@ -241,36 +241,6 @@ def classify_for_svm(net, all_images, feature, feat_vectors, index=0):
             print "Classified " + str(index + i) + " images."
 
 
-# def classify(net, feature, all_images, feat_vectors, index=0):
-#     caffe.set_device(0)
-#     caffe.set_mode_gpu()
-#
-#     # feat_vectors = []
-#
-#     for i, img in enumerate(all_images):
-#         # copy the image data into the memory allocated for the net
-#         net.blobs['data'].data[...] = img
-#
-#         output = net.forward()
-#
-#         # output_prob = output['prob'][0]  # the output probability vector for the first image in the batch
-#         # print 'predicted class for ' + str(i+1) + '.jpg is:', output_prob.argmax()
-#         # # load ImageNet labels
-#         # labels_file = caffe_root + 'new2/models/alexnet_p_c_3/synset_words.txt'
-#         # labels = np.loadtxt(labels_file, str, delimiter='\t')
-#         # print 'output label:', labels[output_prob.argmax()]
-#
-#         # get features of one layer
-#         feat = net.blobs[feature].data[0]
-#         feat = feat.flat
-#         feat_vectors.append(np.array(feat[:]))
-#
-#         if i % 1000 == 0:
-#             print "Classified " + str(index + i) + " images."
-#
-#     return feat_vectors
-
-
 def read_images_and_labels(transformer, image_tuples, labels, offset, length):
     all_images = []
     file_paths = []
@@ -295,27 +265,6 @@ def read_images_and_labels(transformer, image_tuples, labels, offset, length):
 
             if i == offset + length-1:
                 break
-
-
-    # for i, (fp, label) in enumerate(image_tuples):
-    #     if offset <= i < (offset + length):
-    #         file_paths.append(fp)
-    #         labels.append(label)
-    #
-    # for i, fp in enumerate(file_paths):
-    #     try:
-    #         image = caffe.io.load_image('/home/zexe/' + fp)
-    #         transformed_image = transformer.preprocess('data', image)
-    #         all_images.append(transformed_image)
-    #     except:
-    #         print "Error reading image (Probably not an image). # " + str(error_number)
-    #         error_number += 1
-    #
-    #     if i % 1000 == 0:
-    #         print "Read " + str(offset + i) + " images."
-    #
-    #     if i == offset + length - 1:
-    #         break
 
     return all_images
 
@@ -345,73 +294,6 @@ def load_images_to_classify(transformer, shot_paths):
     print "Read all images."
 
     return all_images
-
-
-# def get_labels(video, filename='groundtruths/labels.txt'):
-# # def get_labels(filename='synset_words.txt'):
-#     # data = FileIO.read_synset_words(filename)
-#     #
-#     # labels = []
-#     #
-#     # for i,cls in enumerate(data):
-#     #     if cls == 'sport' or cls == 'water sport':
-#     #         labels.append(i)
-#
-#     labels = FileIO.read_labels(filename, video)
-#
-#     return labels
-
-
-# def calc_accuracy(predicted_labels, filename_csv, video):
-#     #for prec, recall, ... calculation
-#     ground_truth = FileIO.read_groundtruth(filename_csv)
-#     labels = get_labels(video)
-#
-#     list_of_groundtruth_images = []
-#
-#     #refactor groundtruth
-#     for (a,b) in ground_truth:
-#         for i in range(a,b+1):
-#             list_of_groundtruth_images.append(i)
-#
-#     list_of_relevant_images = []
-#
-#     for i, label in enumerate(predicted_labels):
-#         if label in labels:
-#             list_of_relevant_images.append(i + 1)
-#
-#     list_of_true_positives = []
-#
-#     for ri in list_of_relevant_images:
-#         if ri in list_of_groundtruth_images:
-#             list_of_true_positives.append(ri)
-#
-#     print str(len(list_of_groundtruth_images))
-#     print str(len(list_of_relevant_images))
-#     print str(len(list_of_true_positives))
-#
-#     if len(list_of_relevant_images) != 0:
-#         precision = float(len(list_of_true_positives)) / len(list_of_relevant_images)
-#     else:
-#         precision = 0
-#     if len(list_of_true_positives) != 0:
-#         recall = float(len(list_of_true_positives)) / len(list_of_groundtruth_images)
-#     else:
-#         recall = 0
-#     if (precision + recall) != 0:
-#         f_measure = 2 * float(precision*recall) / (precision+recall)
-#     else:
-#         f_measure = 0
-#
-#     precision = format(precision, '.4f')
-#     recall = format(recall, '.4f')
-#     f_measure = format(f_measure, '.4f')
-#
-#     print "Precision: " + str(precision)
-#     print "Recall: " + str(recall)
-#     print "F-measure: " + str(f_measure)
-#
-#     return float(precision), float(recall), float(f_measure
 
 
 def calc_accuracy(predicted_labels, conceptsList, mapp):
@@ -484,52 +366,3 @@ def read_and_classify_imagenet_images(net, transformer, model, feature):
         shot_paths = classify_for_svm(net, all_images, feature, feat_vectors, offset * length)
 
     return labels, feat_vectors, shot_paths
-
-
-# def calc_average_accuracy(acc):
-#     length = len(acc)
-#
-#     prec_sum = float(0)
-#     rec_sum = float(0)
-#     f_sum = float(0)
-#     time_sum = float(0)
-#     images_sum = 0
-#
-#     for (prec, rec, f_measure, time, images) in acc:
-#         prec_sum += prec
-#         rec_sum += rec
-#         f_sum += f_measure
-#         time_sum += float(time)
-#         images_sum += images
-#
-#     prec_sum = prec_sum / length
-#     rec_sum = rec_sum / length
-#     f_sum = f_sum / length
-#
-#     return prec_sum, rec_sum, f_sum, time_sum, images_sum
-
-
-
-
-# def load_images_to_classify(transformer, duration, video):
-#     all_images = []
-#
-#     # get number of files in directory
-#     path = ffmpeg_root + video + '/' + duration + '/'
-#     num_files = len([f for f in os.listdir(path)
-#                      if os.path.isfile(os.path.join(path, f))]) - 1
-#
-#     # load and preprocess all image files
-#     for i in range(1, num_files):
-#         image = caffe.io.load_image(ffmpeg_root + video + '/' + duration + '/' + str(i) + '.jpg')
-#         transformed_image = transformer.preprocess('data', image)
-#         all_images.append(transformed_image)
-#
-#         if i % 1000 == 0:
-#             print "Read " + str(i) + " images."
-#
-#     print "Read all images."
-#     # plt.imshow(image)
-#     # plt.show()
-#
-#     return all_images

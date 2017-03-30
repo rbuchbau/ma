@@ -8,19 +8,25 @@ from concept_crawling import FileIO as ccFileIO
 
 def main():
     models = ['alexnet_p', 'alexnet_p_c', 'alexnet_p_without_weights', 'alexnet_p_c_without_weights']
+    features = ['fc6', 'fc7']
     # models = ['alexnet_p_without_weights', 'alexnet_p_c_without_weights']
     # models = ['alexnet_p']
 
-    svm(models)
+    # svm(models)
 
     # NEW
     # model(models)
 
-    # FileIO.write_average_accuracies('acc_results_avgs/acc_results.txt', models)
+    for model in models:
+        #for cnn models
+        # FileIO.write_average_accuracies('acc_results_avgs/acc_results.txt', model)
+
+        #for svms
+        for feature in features:
+            FileIO.write_average_accuracies('acc_results_avgs/acc_results.txt', model + '_' + feature)
 
 
-def svm(models):
-    features = ['fc6', 'fc7']
+def svm(models, features):
     kernel = 'rbf'
 
     #convert model mean from .binaryproto to .npy (needs only be done once for each model

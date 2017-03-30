@@ -119,27 +119,25 @@ def read_accuracies_and_average_them(filename):
     return lengths
 
 
-def write_average_accuracies(filename, models):
+def write_average_accuracies(filename, model):
+    values = [0, 0, 0]
+    (a, b, c) = read_accuracies_and_average_them('acc_results/' + model + '.txt')
+    values[0] = a
+    values[1] = b
+    values[2] = c
 
-    for model in models:
-        values = [0, 0, 0]
-        (a, b, c) = read_accuracies_and_average_them('acc_results/' + model + '.txt')
-        values[0] = a
-        values[1] = b
-        values[2] = c
+    prec, rec, f_m = 0.0, 0.0, 0.0
 
-        prec, rec, f_m = 0.0, 0.0, 0.0
+    if values[1] > 0:
+        prec = float(values[0]) / values[1]
 
-        if values[1] > 0:
-            prec = float(values[0]) / values[1]
+    if values[1] > 0:
+        rec = float(values[0]) / values[2]
 
-        if values[1] > 0:
-            rec = float(values[0]) / values[2]
+    if (prec + rec) > 0:
+        f_m = 2 * float(prec * rec) / (prec + rec)
 
-        if (prec + rec) > 0:
-            f_m = 2 * float(prec * rec) / (prec + rec)
+    with open(filename, 'a') as f:
+        f.write(str(prec) + ' ' + str(rec) + ' ' + str(f_m) + ' ' + model + '\n')
 
-        with open(filename, 'a') as f:
-            f.write(str(prec) + ' ' + str(rec) + ' ' + str(f_m) + ' ' + model + '\n')
-
-            f.close()
+        f.close()
