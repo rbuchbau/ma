@@ -105,11 +105,6 @@ def read_accuracies_and_average_them(filename):
         reader = csv.reader(f, delimiter=' ')
         for line in reader:
             if len(line) == 7:
-                # name = line[0]
-                # precision = line[1]
-                # recall = line[2]
-                # f_measure = line[3]
-
                 lengths[0] += int(line[4])
                 lengths[1] += int(line[5])
                 lengths[2] += int(line[6])
@@ -138,6 +133,38 @@ def write_average_accuracies(filename, model):
         f_m = 2 * float(prec * rec) / (prec + rec)
 
     with open(filename, 'a') as f:
-        f.write(str(prec) + ' ' + str(rec) + ' ' + str(f_m) + ' ' + model + '\n')
+        f.write(model + ' ' + "{0:.4f}".format(prec) + ' ' + "{0:.4f}".format(rec) + ' ' + "{0:.4f}".format(f_m) + '\n')
 
         f.close()
+
+
+def format_accuracies(filename_from, filename_to, filename_concepts, modfeat):
+    data = []
+    with open(filename_from, 'r') as f:  # open file for reading
+        reader = csv.reader(f, delimiter=' ')  # create reader
+        for line in reader:
+            if len(line) == 7:
+                data.append( (line[0], line[1], line[2], line[3], line[4], line[5], line[6]) )
+        f.close()
+
+    #sort
+    data_sorted = sorted(data, key=lambda tup: tup[0])
+
+    with open(filename_to, 'a') as f_w:
+        f_w.write('Concept Precis. Recall F-Meas. #TP #Pos #Rel\n')
+        for d in data_sorted:
+            #output per model/feature
+            (concept, prec, rec, f_m, tp, po, rel) = d
+            f_w.write(concept + ' ' + "{0:.4f}".format(float(prec)) + ' ' + "{0:.4f}".format(float(rec)) + ' ' +
+                      "{0:.4f}".format(float(f_m)) + ' ' + tp + ' ' + po + ' ' + rel + '\n')
+
+            #output per concept
+            with open(filename_concepts + concept + '.txt', 'a') as f_c:
+                f_c.write(modfeat + ' ' + "{0:.4f}".format(float(prec)) + ' ' + "{0:.4f}".format(float(rec)) + ' ' +
+                          "{0:.4f}".format(float(f_m)) + ' ' + tp + ' ' + po + ' ' + rel + '\n')
+
+                f_c.close()
+
+
+        f_w.close()
+

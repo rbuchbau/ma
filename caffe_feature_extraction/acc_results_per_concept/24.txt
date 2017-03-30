@@ -1,0 +1,13 @@
+Concept_Feature Precis. Recall F-Meas. #TP #Pos #Rel
+alexnet_p 0.5860 0.0998 0.1705 92 157 922
+alexnet_p_fc6 0.6881 0.0813 0.1455 75 109 922
+alexnet_p_fc7 0.6535 0.0900 0.1582 83 127 922
+alexnet_p_ww 0.4414 0.0531 0.0949 49 111 922
+alexnet_p_ww_fc6 0.5574 0.0369 0.0692 34 61 922
+alexnet_p_ww_fc7 0.5443 0.0466 0.0859 43 79 922
+alexnet_p_c 0.4232 0.1106 0.1754 102 241 922
+alexnet_p_c_fc6 0.4074 0.0597 0.1041 55 135 922
+alexnet_p_c_fc7 0.4839 0.1139 0.1844 105 217 922
+alexnet_p_c_ww 0.3391 0.0857 0.1368 79 233 922
+alexnet_p_c_ww_fc6 0.4301 0.0434 0.0788 40 93 922
+alexnet_p_c_ww_fc7 0.3516 0.0694 0.1159 64 182 922
