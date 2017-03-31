@@ -168,3 +168,50 @@ def format_accuracies(filename_from, filename_to, filename_concepts, modfeat):
 
         f_w.close()
 
+
+def modify_train(filename_in, filename_out, concept):
+    with open(filename_out, 'w') as f_o:
+        with open(filename_in, 'r') as f_i:  # open file for reading
+            reader = csv.reader(f_i, delimiter=' ')  # create reader
+            for line in reader:
+                if len(line) == 2:
+                    conc = line[1]
+                    if conc == str(concept):
+                        conc = '0'
+                    else:
+                        conc = '1'
+
+                    f_o.write(line[0] + ' ' + conc + '\n')
+            f_i.close()
+        f_o.close()
+
+
+def modify_synset_words(filename_in, filename_out, id, concept):
+    data = []
+    with open(filename_in, 'r') as f_i:  # open file for reading
+        lines = f_i.readlines()
+        for line in lines:
+            splits = line.split('\n')
+            split = splits[0]
+            cid = split[0:9]
+            conc = split[10:]
+
+            if conc != concept:
+                conc = 'other'
+
+            data.append( (cid, conc) )
+
+        f_i.close()
+
+    # rearranging so the searched concept has always id 0 and the rest id 1
+    data2 = []
+    data2.append(data[int(id)])
+    del data[int(id)]
+    data2.extend(data)
+
+    with open(filename_out, 'w') as f_o:
+        for d in data2:
+            a, b = d
+            f_o.write(a + ' ' + b + '\n')
+
+        f_o.close()

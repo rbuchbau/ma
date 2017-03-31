@@ -18,8 +18,15 @@ def main():
 
     # formatAccuracies(models, features_out, models_short)
 
-    # calc average accuracies
+    # # calc average accuracies
     # calcAverageAccuracies(models, features)
+
+    # # modify train.txt and val.txt for usage with binary models
+    # modifyTrainTxt()
+
+
+    # # modify synset_words.txt for usage with binary models
+    # modifySynsetWordsTxt()
 
 
 def svm(models, features):
@@ -132,6 +139,24 @@ def calcAverageAccuracies(models, features):
             FileIO.write_average_accuracies('acc_results_avgs/acc_results.txt', model + '_' + feature)
             FileIO.write_average_accuracies('acc_results_avgs/acc_results_only_svms.txt', model + '_' + feature)
 
+
+def modifyTrainTxt():
+    mapp = {'75': '1267', '13': '1015', '24': '1261', '21': '1031', '64': '1010', '0': '1006'}
+    data_types = ['data_p', 'data_p_c']
+    for id in mapp:
+        for dt in data_types:
+            FileIO.modify_train('modified_training_files/' + dt + '/train.txt',
+                                'modified_training_files/' + dt + '/train_' + id + '.txt', id)
+            FileIO.modify_train('modified_training_files/' + dt + '/val.txt',
+                                'modified_training_files/' + dt + '/val_' + id + '.txt', id)
+
+
+def modifySynsetWordsTxt():
+    synset_words = {'0': 'animal', '13': 'boat', '21': 'computer', '24': 'flag', '64': 'beach', '75': 'tree'}
+    for id in synset_words:
+        FileIO.modify_synset_words('synset_words.txt', 'modified_training_files/synset_words_' + id + '.txt', id,
+                                   synset_words[id])
+
+
 if __name__ == '__main__':
     main()
-

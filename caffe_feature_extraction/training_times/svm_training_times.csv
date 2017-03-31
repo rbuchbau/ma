@@ -1,3 +1,4 @@
+Model_Feature Total_time Time_per_image
 alexnet_p_fc6 3122.0503 0.1539
 alexnet_p_fc7 1310.5526 0.0646
 alexnet_p_c_fc6 3543.4026 0.1689
