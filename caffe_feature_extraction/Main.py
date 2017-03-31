@@ -11,6 +11,7 @@ def main():
     models_short = ['alexnet_p', 'alexnet_p_ww', 'alexnet_p_c', 'alexnet_p_c_ww']
     features = ['fc6', 'fc7']
     features_out = ['', '_fc6', '_fc7']
+    mapp = {'75': '1267', '13': '1015', '24': '1261', '21': '1031', '64': '1010', '0': '1006'}
 
     # svm(models)
 
@@ -29,7 +30,7 @@ def main():
     # modifySynsetWordsTxt()
 
 
-def svm(models, features):
+def svm(models, features, mapp):
     kernel = 'rbf'
 
     #convert model mean from .binaryproto to .npy (needs only be done once for each model
@@ -61,8 +62,6 @@ def model(models):
     # 1010 beach <-> 64 beach
     # 1006 animal <-> 0 animal
 
-    mapp = {'75': '1267', '13': '1015', '24': '1261', '21': '1031', '64': '1010', '0': '1006'}
-
     for model in models:
         # convert model mean from .binaryproto to .npy (needs only be done once for each model
         # Fe.convert_binaryproto_to_npy(m)
@@ -86,7 +85,7 @@ def train_svm(models, features, kernel):
 
 
 # def use_svm(model, features, kernel):
-def use_svm(models, features):
+def use_svm(models, features, mapp):
 
     groundtruth_path = '../groundtruth/'
 
@@ -98,8 +97,6 @@ def use_svm(models, features):
 
     acc_values = []
     all_infos = (conceptsList, conceptsList_all, videofiles, needed_shots, shot_paths)
-
-    mapp = {'75': '1267', '13': '1015', '24': '1261', '21': '1031', '64': '1010', '0': '1006'}
 
     for model in models:
         for feature in features:
