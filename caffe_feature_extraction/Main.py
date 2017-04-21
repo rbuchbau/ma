@@ -7,25 +7,26 @@ from concept_crawling import FileIO as ccFileIO
 
 
 def main():
-    models = ['alexnet_p', 'alexnet_p_without_weights', 'alexnet_p_c', 'alexnet_p_c_without_weights']
-    models_short = ['alexnet_p', 'alexnet_p_ww', 'alexnet_p_c', 'alexnet_p_c_ww']
+    # models = ['alexnet_p', 'alexnet_p_without_weights', 'alexnet_p_c', 'alexnet_p_c_without_weights']
+    # models_short = ['alexnet_p', 'alexnet_p_ww', 'alexnet_p_c', 'alexnet_p_c_ww']
+    models = ['alexnet_p_binary_64']
+    models_short = ['alexnet_p_binary_64']
     features = ['fc6', 'fc7']
     features_out = ['', '_fc6', '_fc7']
-    mapp = {'75': '1267', '13': '1015', '24': '1261', '21': '1031', '64': '1010', '0': '1006'}
+    # mapp = {'75': '1267', '13': '1015', '24': '1261', '21': '1031', '64': '1010', '0': '1006'}
+    mapp = {'0': '1010'}   # for binary models, change depending on the used conceptID
 
-    # svm(models)
+    # svm(models, features, mapp)
 
-    # model(models)
+    # model(models, mapp)
 
     # formatAccuracies(models, features_out, models_short)
 
-    # # calc average accuracies
+    # calc average accuracies
     # calcAverageAccuracies(models, features)
 
-    # # modify train.txt and val.txt for usage with binary models
+    # # modify train.txt and val.txt for usage with binary models, can be commented after single use
     # modifyTrainTxt()
-
-
     # # modify synset_words.txt for usage with binary models
     # modifySynsetWordsTxt()
 
@@ -43,7 +44,7 @@ def svm(models, features, mapp):
     use_svm(models, features)
 
 
-def model(models):
+def model(models, mapp):
     groundtruth_path = '../groundtruth/'
     # models = ['alexnet_p']
     # or read them from csv

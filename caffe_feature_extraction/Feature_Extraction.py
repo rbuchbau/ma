@@ -297,10 +297,6 @@ def load_images_to_classify(transformer, shot_paths):
 
 
 def calc_accuracy(predicted_labels, conceptsList, mapp):
-    #for prec, recall, ... calculation
-    # ground_truth = FileIO.read_groundtruth(filename_csv)
-    # labels = get_labels(video)
-
 
     # dictionary of all concepts:
     #   keys = conceptIDs,
@@ -315,25 +311,39 @@ def calc_accuracy(predicted_labels, conceptsList, mapp):
         # get all relevant corpus images
         all_concepts[concept].list_of_all_corpus_images = conceptsList.dictionary[concept].shots[:]
 
-    # set concpet id
+    # set concept id
     for k in mapp.keys():
         for concept in all_concepts.values():
             if mapp[k] == concept.id:
                 concept.name = k
 
 
-    # work the labels
+    # # work the labels
+    # # for shot, label in predicted_labels:
+    # for i, (shot, label) in enumerate(predicted_labels):
+    #     if label in mapp.keys():
+    #         # => is a relevant concept
+    #         conceptID = mapp[label]
+    #         concept = conceptsList.dictionary[conceptID]
+    #         # get true positives
+    #         if shot in concept.shots:
+    #             all_concepts[concept.name].list_of_true_positives.append(shot[:])
+    #         # get all detected images
+    #         all_concepts[concept.name].list_of_all_detected_images.append(shot[:])
+
+    # work the labels (binary models variant)
     # for shot, label in predicted_labels:
     for i, (shot, label) in enumerate(predicted_labels):
         if label in mapp.keys():
             # => is a relevant concept
-            conceptID = mapp[label]
-            concept = conceptsList.dictionary[conceptID]
-            # get true positives
-            if shot in concept.shots:
-                all_concepts[concept.name].list_of_true_positives.append(shot[:])
-            # get all detected images
-            all_concepts[concept.name].list_of_all_detected_images.append(shot[:])
+            if label == '0':
+                conceptID = mapp[label]
+                concept = conceptsList.dictionary[conceptID]
+                # get true positives
+                if shot in concept.shots:
+                    all_concepts[concept.name].list_of_true_positives.append(shot[:])
+                # get all detected images
+                all_concepts[concept.name].list_of_all_detected_images.append(shot[:])
 
     for concept in all_concepts.values():
         concept.calc_precision()
