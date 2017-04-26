@@ -33,6 +33,9 @@ def main():
     videofiles = FileIO.read_videofiles(groundtruth_path + 'needed_videos.txt')
     needed_shots = FileIO.read_selected_shots_from_file(groundtruth_path + 'shots.csv', conceptsList_all)
 
+    # export concepts infos
+    # conceptsList_all.sortList()
+    # FileIO.write_concept_infos_to_file('concepts_infos.txt', conceptsList_all)
 
     # create folders and move videofiles, also check for double videos and export them
     # createFolders(videofiles, path)
@@ -73,14 +76,14 @@ def createConceptsList(ids, double_videos):
     conceptsList = conceptsList_long.copyNConcepts(ids)
 
     # write to csv file
-    fileout = open('../groundtruth/concepts.txt', 'w')
-    fileout.write(conceptsList.toString())
-    fileout.close()
+    # fileout = open('../groundtruth/concepts.txt', 'w')
+    # fileout.write(conceptsList.toString())
+    # fileout.close()
 
     # write to csv file
-    fileout = open('../groundtruth/concepts_all.txt', 'w')
-    fileout.write(conceptsList_long.toString())
-    fileout.close()
+    # fileout = open('../groundtruth/concepts_all.txt', 'w')
+    # fileout.write(conceptsList_long.toString())
+    # fileout.close()
 
     return conceptsList, conceptsList_long
 

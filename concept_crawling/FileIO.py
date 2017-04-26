@@ -313,3 +313,14 @@ def read_metadata_error_files(filename):
         f.close()
 
     return data
+
+
+def write_concept_infos_to_file(filename, conceptsList_long):
+    with open(filename, 'w') as f:
+        f.write('ConceptID #Shots #Videos\n')
+
+        for c in conceptsList_long.concept_list:
+            f.write(c.name + ' ' + str(c.numberOfShots) + ' ' + str(len(c.videos)) + '\n')
+
+        f.close()
+
