@@ -9,8 +9,8 @@ from concept_crawling import FileIO as ccFileIO
 def main():
     # models = ['alexnet_p', 'alexnet_p_without_weights', 'alexnet_p_c', 'alexnet_p_c_without_weights']
     # models_short = ['alexnet_p', 'alexnet_p_ww', 'alexnet_p_c', 'alexnet_p_c_ww']
-    models = ['alexnet_p_binary_64']
-    models_short = ['alexnet_p_binary_64']
+    models = ['alexnet_p_binary_21', 'alexnet_p_binary_64', 'alexnet_p_binary_75']
+    models_short = ['alexnet_p_binary_21', 'alexnet_p_binary_64', 'alexnet_p_binary_75']
     features = ['fc6', 'fc7']
     features_out = ['', '_fc6', '_fc7']
     # mapp = {'75': '1267', '13': '1015', '24': '1261', '21': '1031', '64': '1010', '0': '1006'}
@@ -18,7 +18,7 @@ def main():
 
     # svm(models, features, mapp)
 
-    # model(models, mapp)
+    model(models, mapp)
 
     # formatAccuracies(models, features_out, models_short)
 
@@ -35,19 +35,19 @@ def svm(models, features, mapp):
     kernel = 'rbf'
 
     #convert model mean from .binaryproto to .npy (needs only be done once for each model
-    # Fe.convert_binaryproto_to_npy(model)
+    # for model in models:
+        # Fe.convert_binaryproto_to_npy(model)
 
     #train svm
-    train_svm(models, features, kernel)
+    # train_svm(models, features, kernel)
 
     # use svm
-    use_svm(models, features)
+    # use_svm(models, features)
 
 
 def model(models, mapp):
     groundtruth_path = '../groundtruth/'
-    # models = ['alexnet_p']
-    # or read them from csv
+    # read them from csv
     conceptsList = ccFileIO.readConceptTxt(groundtruth_path + 'concepts.txt')
     conceptsList_all = ccFileIO.readConceptTxt(groundtruth_path + 'concepts_all.txt')
     videofiles = ccFileIO.read_videofiles(groundtruth_path + 'needed_videos.txt')

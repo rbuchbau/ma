@@ -179,7 +179,10 @@ def load_and_use_model(model, all_infos, mapp):
 
     # perform classification
     print "Classifying for model " + model
+    s_time = timeit.default_timer()
     predicted_labels = classify(net, all_images)
+    time = format(timeit.default_timer() - s_time, '.4f')
+    FileIO.write_times('training_times/classification_times.csv', time, model, '', len(predicted_labels))
 
 
     print "Calculating evaluation parameters for model " + model
