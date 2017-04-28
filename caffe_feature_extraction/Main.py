@@ -9,12 +9,11 @@ from concept_crawling import FileIO as ccFileIO
 def main():
     # models = ['alexnet_p', 'alexnet_p_without_weights', 'alexnet_p_c', 'alexnet_p_c_without_weights']
     # models_short = ['alexnet_p', 'alexnet_p_ww', 'alexnet_p_c', 'alexnet_p_c_ww']
-    models = ['alexnet_p_binary_21', 'alexnet_p_binary_64', 'alexnet_p_binary_75']
-    models_short = ['alexnet_p_binary_21', 'alexnet_p_binary_64', 'alexnet_p_binary_75']
+    models = ['alexnet_p_binary_75']
     features = ['fc6', 'fc7']
     features_out = ['', '_fc6', '_fc7']
     # mapp = {'75': '1267', '13': '1015', '24': '1261', '21': '1031', '64': '1010', '0': '1006'}
-    mapp = {'0': '1010'}   # for binary models, change depending on the used conceptID
+    mapp = {'0': '1267'}   # for binary models, change depending on the used conceptID
 
     # svm(models, features, mapp)
 
