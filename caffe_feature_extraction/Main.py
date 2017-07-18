@@ -7,17 +7,18 @@ from concept_crawling import FileIO as ccFileIO
 
 
 def main():
-    # models = ['alexnet_p', 'alexnet_p_without_weights', 'alexnet_p_c', 'alexnet_p_c_without_weights']
-    # models_short = ['alexnet_p', 'alexnet_p_ww', 'alexnet_p_c', 'alexnet_p_c_ww']
-    models = ['alexnet_p_binary_75']
-    features = ['fc6', 'fc7']
+    # models = ['alexnet_p', 'alexnet_p_c', 'alexnet_p_without_weights', 'alexnet_p_c_without_weights']
+    # models_short = ['alexnet', 'alexnet_p', 'alexnet_p_ww', 'alexnet_p_c', 'alexnet_p_c_ww']
+    models = ['alexnet_p_c_without_weights']
+    # features = ['fc6', 'fc7']
+    features = ['fc7']
     features_out = ['', '_fc6', '_fc7']
-    # mapp = {'75': '1267', '13': '1015', '24': '1261', '21': '1031', '64': '1010', '0': '1006'}
-    mapp = {'0': '1267'}   # for binary models, change depending on the used conceptID
+    mapp = {'75': '1267', '13': '1015', '24': '1261', '21': '1031', '64': '1010', '0': '1006'}
+    # mapp = {'0': '1267'}   # for binary models, change depending on the used conceptID
 
-    # svm(models, features, mapp)
+    svm(models, features, mapp)
 
-    model(models, mapp)
+    # model(models, mapp)
 
     # formatAccuracies(models, features_out, models_short)
 
@@ -31,17 +32,19 @@ def main():
 
 
 def svm(models, features, mapp):
-    kernel = 'rbf'
+    # kernels = ['linear', 'rbf']
+    kernels = ['linear']
 
     #convert model mean from .binaryproto to .npy (needs only be done once for each model
     # for model in models:
-        # Fe.convert_binaryproto_to_npy(model)
+    #     Fe.convert_binaryproto_to_npy(model)
 
     #train svm
-    # train_svm(models, features, kernel)
+    for kernel in kernels:
+        # train_svm(models, features, kernel)
+        # use svm
+        use_svm(models, features, mapp, kernel)
 
-    # use svm
-    # use_svm(models, features)
 
 
 def model(models, mapp):
@@ -74,9 +77,10 @@ def model(models, mapp):
 def train_svm(models, features, kernel):
     for model in models:
         for feature in features:
-            filename = '' + model + '_' + feature
-            # svm_path = 'svms/' + feature + '/' + kernel + '/svm_' + kernel + '_' + filename + '_' \
-            #            + str(svm_size) + '/svm_' + kernel + '_' + filename + '_' + str(svm_size) + '.pkl'
+            if kernel == 'rbf':
+                filename = '' + model + '_' + feature
+            else:
+                filename = '' + model + '_' + feature + '_' + kernel
 
             svm_path = 'svms/' + filename + '.pkl'
 
@@ -85,7 +89,7 @@ def train_svm(models, features, kernel):
 
 
 # def use_svm(model, features, kernel):
-def use_svm(models, features, mapp):
+def use_svm(models, features, mapp, kernel):
 
     groundtruth_path = '../groundtruth/'
 
@@ -100,8 +104,13 @@ def use_svm(models, features, mapp):
 
     for model in models:
         for feature in features:
-            acc_values_for_all_concepts = Fe.load_and_use_svm(model, feature, all_infos, mapp, True)
-            FileIO.write_accuracies(acc_values_for_all_concepts, model + '_' + feature)
+            acc_values_for_all_concepts = Fe.load_and_use_svm(model, feature, all_infos, mapp, kernel, True)
+
+            if kernel == 'rbf':
+                filename = '' + model + '_' + feature
+            else:
+                filename = '' + model + '_' + feature + '_' + kernel
+            FileIO.write_accuracies(acc_values_for_all_concepts, filename)
 
 
 def formatAccuracies(models, features_out, models_short):

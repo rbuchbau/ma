@@ -1,4 +1,3 @@
-
 import numpy as np
 import sys
 
@@ -8,9 +7,10 @@ import FileIO
 from sklearn.svm import SVC
 from sklearn.externals import joblib
 from sklearn.preprocessing import StandardScaler
+
 caffe_root = '/home/zexe/caffe/'
 # ffmpeg_root ='/home/zexe/disk1/Downloads/ffmpeg_video/'
-ffmpeg_root ='/home/zexe/PycharmProjects/ma/videodataset/'
+ffmpeg_root = '/home/zexe/PycharmProjects/ma/videodataset/'
 sys.path.insert(0, caffe_root + 'python')
 sys.path.append('/home/zexe/caffe/python')
 import caffe
@@ -56,30 +56,36 @@ def init_caffe_net(model):
 
 
 def train_and_save_svm(svm_path, model, feature, kernel, save):
-    #init caffe net
+    # init caffe net
     net, transformer = init_caffe_net(model)
     filename = model + '_' + feature
 
     # feat_vectors = []
 
     if save:
-        #either compute feature vectors and write them
+        # either compute feature vectors and write them
         # labels = read_and_classify_imagenet_images(net, transformer, feature, feat_vectors, svm_size)
-        labels, feat_vectors, shot_paths = read_and_classify_imagenet_images(net, transformer, model, feature)
+        labels, feat_vectors = read_and_classify_imagenet_images(net, transformer, model, feature)
         # write feature vectors
         print "Writing feature vectors to file."
         np.savetxt('feature_vectors_training/' + filename + '_labels.csv', labels, fmt='%i')
         np.savetxt('feature_vectors_training/' + filename + '.csv', feat_vectors, delimiter=',', fmt='%4.4f')
     else:
-        #or load them from file
+        # or load them from file
         print "Loading feature vectors."
         labels = np.genfromtxt('feature_vectors_training/' + filename + '_labels.csv')
         feat_vectors = np.genfromtxt('feature_vectors_training/' + filename + '.csv',
                                      dtype='float32', delimiter=',')
 
-    #svm stuff
+    if kernel == 'rbf':
+        filename = '' + model + '_' + feature
+    else:
+        filename = '' + model + '_' + feature + '_' + kernel
 
-    #prepare data for svm training
+    print filename
+
+    # svm stuff
+    # prepare data for svm training
     X_train = np.array(feat_vectors)
     y_train = np.array(labels)
 
@@ -87,81 +93,88 @@ def train_and_save_svm(svm_path, model, feature, kernel, save):
     # X_train_scaled = std_scaler.fit_transform(X_train)
     std_scaler.fit(X_train)
     X_train_scaled = std_scaler.transform(X_train)
-    joblib.dump(std_scaler, 'svms/scaler/' + filename + '/' + filename + '.pkl')
-    # X_train_scaled = X_train
+    scalername = 'svms/scaler/' + filename + '/' + filename + '.pkl'
+    print "Scaler: " + scalername
+    joblib.dump(std_scaler, scalername)
+    X_train_scaled = X_train
 
-    #create classifier
-    print "Training SVM"
+    # create classifier
+    print "Training SVM: " + svm_path
     clf = SVC(kernel=kernel, max_iter=1000, tol=1e-6)
 
-    #train svm
+    # train svm
     s_time = timeit.default_timer()
     clf.fit(X_train_scaled, y_train)
     # clf.fit(X_pca, y_train)
 
     time = format(timeit.default_timer() - s_time, '.4f')
     print "Time for training: " + str(time) + " seconds."
-    FileIO.write_times('training_times/svm_training_times.csv', time, model, feature)
+    FileIO.write_times('training_times/svm_training_times.csv', time, model, feature, kernel)
 
-    #save svm to file
+    # save svm to file
     joblib.dump(clf, svm_path)
 
 
-def load_and_use_svm(model, feature, all_infos, mapp, save=False):
+def load_and_use_svm(model, feature, all_infos, mapp, kernel, save=False):
     (conceptsList, conceptsList_all, videofiles, needed_shots, shot_paths) = all_infos
     filename = model + '_' + feature
 
     if save:
-        #init caffe net
+        # init caffe net
         net, transformer = init_caffe_net(model)
 
-        #read images to classify from folder
+        # read images to classify from folder
         print "Preparing images for model " + model
-        all_images = load_images_to_classify(transformer, shot_paths)
+        all_images = read_images_for_predicting(transformer, shot_paths)
 
         ### perform classification
         print "Classifying for model " + model
         feat_vectors = []
-        classify_for_svm(net, all_images, feature, feat_vectors)
+        classify_for_svm_predicting(net, all_images, feature, feat_vectors)
 
-        #write feature vectors
+        # write feature vectors
         print "Writing feature vectors to file: " + filename + "."
         np.savetxt('feature_vectors/' + filename + '.csv', feat_vectors, delimiter=',', fmt='%4.4f')
     else:
-        #or load them from file
+        # or load them from file
         print "Loading feature vectors from " + filename
         feat_vectors = np.genfromtxt('feature_vectors/' + filename + '.csv',
                                      dtype='float32', delimiter=',')
 
-    #load svm from file
-    print "Load SVM: " + filename
-    svm = joblib.load('svms/' + filename +'.pkl')
 
-    #prepare data for svm training
+    if kernel == 'rbf':
+        filename = '' + model + '_' + feature
+    else:
+        filename = '' + model + '_' + feature + '_' + kernel
+
+    # load svm from file
+    print "Load SVM: " + filename
+    svm = joblib.load('svms/' + filename + '.pkl')
+
+    # prepare data for svm training
     X_test = np.array(feat_vectors)
     std_scaler = joblib.load('svms/scaler/' + filename + '/' + filename + '.pkl')
     X_test_scaled = std_scaler.transform(X_test)
     # X_test_scaled = X_test
 
-    #try pca
+    # try pca
     # pca = joblib.load('svms/pca/1.pkl')
     # X_pca = pca.transform(X_test_scaled)
 
-    #let it predict
+    # let it predict
     print "Start predicting."
     s_time = timeit.default_timer()
     predicted_labels = svm.predict(X_test_scaled)
     # predicted_labels = svm.predict(X_pca)
     time = format(timeit.default_timer() - s_time, '.4f')
-    FileIO.write_times('training_times/prediction_times.csv', time, model, feature)
+    FileIO.write_times('training_times/prediction_times.csv', time, model, feature, kernel)
 
     print "Calculating evaluation parameters."
-    #labels is a numpy array
+    # labels is a numpy array
     pred_labels = []
     predicted_labels_list = predicted_labels.tolist()
     for i, prediction in enumerate(predicted_labels_list):
-        pred_labels.append ((shot_paths[i].name,str(prediction)))
-
+        pred_labels.append((shot_paths[i].name, str(prediction)))
 
     acc_values_for_all_concepts = calc_accuracy(pred_labels, conceptsList, mapp)
 
@@ -171,11 +184,11 @@ def load_and_use_svm(model, feature, all_infos, mapp, save=False):
 def load_and_use_model(model, all_infos, mapp):
     (conceptsList, conceptsList_all, videofiles, needed_shots, shot_paths) = all_infos
 
-    #init caffe net
+    # init caffe net
     net, transformer = init_caffe_net(model)
-    #read images to classify from folder
+    # read images to classify from folder
     print "Preparing images for model " + model
-    all_images = load_images_to_classify(transformer, shot_paths)
+    all_images = read_images_for_predicting(transformer, shot_paths)
 
     # perform classification
     print "Classifying for model " + model
@@ -183,7 +196,6 @@ def load_and_use_model(model, all_infos, mapp):
     predicted_labels = classify(net, all_images)
     time = format(timeit.default_timer() - s_time, '.4f')
     FileIO.write_times('training_times/classification_times.csv', time, model, '', len(predicted_labels))
-
 
     print "Calculating evaluation parameters for model " + model
     acc_values_for_all_concepts = calc_accuracy(predicted_labels, conceptsList, mapp)
@@ -194,15 +206,14 @@ def load_and_use_model(model, all_infos, mapp):
 def convert_binaryproto_to_npy(model):
     # convert .binaryproto to .npy
     blob = caffe.proto.caffe_pb2.BlobProto()
-    data = open( caffe_root + 'new2/models/new/' + model + '/mean.binaryproto', 'rb' ).read()
+    data = open(caffe_root + 'new2/models/new/' + model + '/mean.binaryproto', 'rb').read()
     blob.ParseFromString(data)
-    arr = np.array( caffe.io.blobproto_to_array(blob) )
+    arr = np.array(caffe.io.blobproto_to_array(blob))
     out = arr[0]
-    np.save( caffe_root + 'new2/models/new/' + model + '/mean.npy' , out )
+    np.save(caffe_root + 'new2/models/new/' + model + '/mean.npy', out)
 
 
 def classify(net, all_images, index=0):
-
     caffe.set_device(0)
     caffe.set_mode_gpu()
 
@@ -225,7 +236,26 @@ def classify(net, all_images, index=0):
     return labels
 
 
-def classify_for_svm(net, all_images, feature, feat_vectors, index=0):
+def classify_for_svm_training(net, all_images, feature, feat_vectors, index=0):
+    caffe.set_device(0)
+    caffe.set_mode_gpu()
+
+    # for i, (img, shot_path) in enumerate(all_images):
+    for i, img in enumerate(all_images):
+        # copy the image data into the memory allocated for the net
+        net.blobs['data'].data[...] = img
+
+        output = net.forward()
+
+        # get features of one layer
+        feat = net.blobs[feature].data[0]
+        feat = feat.flat
+        feat_vectors.append(np.array(feat[:]))
+
+        if i % 1000 == 0:
+            print "Classified " + str(index + i) + " images."
+
+def classify_for_svm_predicting(net, all_images, feature, feat_vectors, index=0):
     caffe.set_device(0)
     caffe.set_mode_gpu()
 
@@ -244,16 +274,36 @@ def classify_for_svm(net, all_images, feature, feat_vectors, index=0):
             print "Classified " + str(index + i) + " images."
 
 
-def read_images_and_labels(transformer, image_tuples, labels, offset, length):
+def read_and_classify_imagenet_images(net, transformer, model, feature):
+    svm_size = 25000
+    # read images and labels from disk
+    print "Preparing and classifying images."
+    # read text file with labels
+    splits = model.split('_without')
+    image_tuples = FileIO.read_csv(
+        'paths/' + splits[0] + '_train_svm.txt')  # returns list of tupels (file_path, label)
+
+    length = 1000
+    labels = []
+
+    feat_vectors = []
+
+    for offset in range(0 / length, svm_size / length):
+        all_images = read_images_for_training(transformer, image_tuples, labels, offset * length, length)
+        classify_for_svm_training(net, all_images, feature, feat_vectors, offset * length)
+
+    return labels, feat_vectors
+
+
+def read_images_for_training(transformer, image_tuples, labels, offset, length):
     all_images = []
     file_paths = []
 
     # labels = []
     error_number = 0
 
-
     for i, (fp, label) in enumerate(image_tuples):
-        if offset <= i < (offset+length):
+        if offset <= i < (offset + length):
             try:
                 image = caffe.io.load_image('/home/zexe/' + fp)
                 transformed_image = transformer.preprocess('data', image)
@@ -266,13 +316,13 @@ def read_images_and_labels(transformer, image_tuples, labels, offset, length):
             if i % 1000 == 0:
                 print "Read " + str(i) + " images."
 
-            if i == offset + length-1:
+            if i == offset + length - 1:
                 break
 
     return all_images
 
 
-def load_images_to_classify(transformer, shot_paths):
+def read_images_for_predicting(transformer, shot_paths):
     all_images = []
 
     # get number of files in directory
@@ -293,14 +343,12 @@ def load_images_to_classify(transformer, shot_paths):
             # if i == 23000:
             #     break
 
-
     print "Read all images."
 
     return all_images
 
 
 def calc_accuracy(predicted_labels, conceptsList, mapp):
-
     # dictionary of all concepts:
     #   keys = conceptIDs,
     #   values = true_positives, relevant_images, corpus_images, precision, recall, f_measure
@@ -320,33 +368,32 @@ def calc_accuracy(predicted_labels, conceptsList, mapp):
             if mapp[k] == concept.id:
                 concept.name = k
 
-
-    # # work the labels
-    # # for shot, label in predicted_labels:
-    # for i, (shot, label) in enumerate(predicted_labels):
-    #     if label in mapp.keys():
-    #         # => is a relevant concept
-    #         conceptID = mapp[label]
-    #         concept = conceptsList.dictionary[conceptID]
-    #         # get true positives
-    #         if shot in concept.shots:
-    #             all_concepts[concept.name].list_of_true_positives.append(shot[:])
-    #         # get all detected images
-    #         all_concepts[concept.name].list_of_all_detected_images.append(shot[:])
-
-    # work the labels (binary models variant)
+    # work the labels
     # for shot, label in predicted_labels:
     for i, (shot, label) in enumerate(predicted_labels):
         if label in mapp.keys():
             # => is a relevant concept
-            if label == '0':
-                conceptID = mapp[label]
-                concept = conceptsList.dictionary[conceptID]
-                # get true positives
-                if shot in concept.shots:
-                    all_concepts[concept.name].list_of_true_positives.append(shot[:])
-                # get all detected images
-                all_concepts[concept.name].list_of_all_detected_images.append(shot[:])
+            conceptID = mapp[label]
+            concept = conceptsList.dictionary[conceptID]
+            # get true positives
+            if shot in concept.shots:
+                all_concepts[concept.name].list_of_true_positives.append(shot[:])
+            # get all detected images
+            all_concepts[concept.name].list_of_all_detected_images.append(shot[:])
+
+    # # work the labels (binary models variant)
+    # # for shot, label in predicted_labels:
+    # for i, (shot, label) in enumerate(predicted_labels):
+    #     if label in mapp.keys():
+    #         # => is a relevant concept
+    #         if label == '0':
+    #             conceptID = mapp[label]
+    #             concept = conceptsList.dictionary[conceptID]
+    #             # get true positives
+    #             if shot in concept.shots:
+    #                 all_concepts[concept.name].list_of_true_positives.append(shot[:])
+    #             # get all detected images
+    #             all_concepts[concept.name].list_of_all_detected_images.append(shot[:])
 
     for concept in all_concepts.values():
         concept.calc_precision()
@@ -355,27 +402,3 @@ def calc_accuracy(predicted_labels, conceptsList, mapp):
 
     return all_concepts
 
-
-def read_and_classify_imagenet_images(net, transformer, model, feature):
-    svm_size = 25000
-    # read images and labels from disk
-    print "Preparing and classifying images."
-    # read text file with labels
-    splits = model.split('_without')
-    image_tuples = FileIO.read_csv(
-        'paths/' + splits[0] + '_train_svm.txt')  # returns list of tupels (file_path, label)
-
-    length = 1000
-    labels = []
-
-    feat_vectors = []
-
-
-    for offset in range(0 / length, svm_size / length):
-        all_images = read_images_and_labels(transformer, image_tuples, labels, offset * length, length)
-        # all_images, labels = read_images_and_labels(transformer, images_filepaths, [], offset * length, length)
-
-        # feat_vectors = classify(net, feature, all_images, offset * length)
-        shot_paths = classify_for_svm(net, all_images, feature, feat_vectors, offset * length)
-
-    return labels, feat_vectors, shot_paths
