@@ -72,6 +72,7 @@ def train_and_save_svm(svm_path, model, feature, kernel, save):
         np.savetxt('feature_vectors_training/' + filename + '.csv', feat_vectors, delimiter=',', fmt='%4.4f')
     else:
         # or load them from file
+        # maybe not working correct!
         print "Loading feature vectors."
         labels = np.genfromtxt('feature_vectors_training/' + filename + '_labels.csv')
         feat_vectors = np.genfromtxt('feature_vectors_training/' + filename + '.csv',
@@ -137,6 +138,7 @@ def load_and_use_svm(model, feature, all_infos, mapp, kernel, save=False):
         np.savetxt('feature_vectors/' + filename + '.csv', feat_vectors, delimiter=',', fmt='%4.4f')
     else:
         # or load them from file
+        # maybe not working correct!
         print "Loading feature vectors from " + filename
         feat_vectors = np.genfromtxt('feature_vectors/' + filename + '.csv',
                                      dtype='float32', delimiter=',')

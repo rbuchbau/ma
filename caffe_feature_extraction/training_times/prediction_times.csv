@@ -15,3 +15,5 @@ alexnet_p_without_weights_fc6_linear 2276.3780 2276.378
 alexnet_p_without_weights_fc7_linear 1439.1978 1439.1978
 alexnet_p_c_without_weights_fc6_linear 2491.2991 2491.2991
 alexnet_p_c_without_weights_fc7_linear 1969.4588 1969.4588
+alexnet_fc6_rbf 3247.4638 3247.4638
+alexnet_fc7_rbf 2947.6484 2947.6484

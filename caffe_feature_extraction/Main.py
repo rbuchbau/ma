@@ -7,20 +7,22 @@ from concept_crawling import FileIO as ccFileIO
 
 
 def main():
-    # models = ['alexnet_p', 'alexnet_p_c', 'alexnet_p_without_weights', 'alexnet_p_c_without_weights']
-    # models_short = ['alexnet', 'alexnet_p', 'alexnet_p_ww', 'alexnet_p_c', 'alexnet_p_c_ww']
-    models = ['alexnet_p_c_without_weights']
+    models = ['alexnet_p', 'alexnet_p_c', 'alexnet_p_without_weights', 'alexnet_p_c_without_weights']
+    models_short = ['alexnet_p', 'alexnet_p_ww', 'alexnet_p_c', 'alexnet_p_c_ww']
+    # models = ['alexnet']
     # features = ['fc6', 'fc7']
-    features = ['fc7']
-    features_out = ['', '_fc6', '_fc7']
+    # kernels = ['linear', 'rbf']
+    kernels = ['linear']
+    features = ['fc6']
+    features_out = ['', '_fc6', '_fc7', '_fc6_linear', '_fc7_linear']
     mapp = {'75': '1267', '13': '1015', '24': '1261', '21': '1031', '64': '1010', '0': '1006'}
     # mapp = {'0': '1267'}   # for binary models, change depending on the used conceptID
 
-    svm(models, features, mapp)
+    # svm(models, features, mapp, kernels)
 
     # model(models, mapp)
 
-    # formatAccuracies(models, features_out, models_short)
+    formatAccuracies(models, features_out, models_short)
 
     # calc average accuracies
     # calcAverageAccuracies(models, features)
@@ -31,9 +33,7 @@ def main():
     # modifySynsetWordsTxt()
 
 
-def svm(models, features, mapp):
-    # kernels = ['linear', 'rbf']
-    kernels = ['linear']
+def svm(models, features, mapp, kernels):
 
     #convert model mean from .binaryproto to .npy (needs only be done once for each model
     # for model in models:
@@ -41,7 +41,7 @@ def svm(models, features, mapp):
 
     #train svm
     for kernel in kernels:
-        # train_svm(models, features, kernel)
+        train_svm(models, features, kernel)
         # use svm
         use_svm(models, features, mapp, kernel)
 

@@ -156,13 +156,13 @@ def format_accuracies(filename_from, filename_to, filename_concepts, modfeat):
         for d in data_sorted:
             #output per model/feature
             (concept, prec, rec, f_m, tp, po, rel) = d
-            f_w.write(concept + ' ' + "{0:.4f}".format(float(prec)) + ' ' + "{0:.4f}".format(float(rec)) + ' ' +
-                      "{0:.4f}".format(float(f_m)) + ' ' + tp + ' ' + po + ' ' + rel + '\n')
+            f_w.write(concept + ' ' + "{0:.3f}".format(float(prec)) + ' ' + "{0:.3f}".format(float(rec)) + ' ' +
+                      "{0:.3f}".format(float(f_m)) + ' ' + tp + ' ' + po + ' ' + rel + '\n')
 
             #output per concept
             with open(filename_concepts + concept + '.txt', 'a') as f_c:
-                f_c.write(modfeat + ' ' + "{0:.4f}".format(float(prec)) + ' ' + "{0:.4f}".format(float(rec)) + ' ' +
-                          "{0:.4f}".format(float(f_m)) + ' ' + tp + ' ' + po + ' ' + rel + '\n')
+                f_c.write(modfeat + ' ' + "{0:.3f}".format(float(prec)) + ' ' + "{0:.3f}".format(float(rec)) + ' ' +
+                          "{0:.3f}".format(float(f_m)) + ' ' + tp + ' ' + po + ' ' + rel + '\n')
 
                 f_c.close()
 
