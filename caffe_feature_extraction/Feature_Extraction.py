@@ -91,17 +91,17 @@ def train_and_save_svm(svm_path, model, feature, kernel, save):
     y_train = np.array(labels)
 
     std_scaler = StandardScaler()
-    # X_train_scaled = std_scaler.fit_transform(X_train)
     std_scaler.fit(X_train)
     X_train_scaled = std_scaler.transform(X_train)
     scalername = 'svms/scaler/' + filename + '/' + filename + '.pkl'
     print "Scaler: " + scalername
     joblib.dump(std_scaler, scalername)
-    X_train_scaled = X_train
+    # X_train_scaled = X_train
 
     # create classifier
     print "Training SVM: " + svm_path
     clf = SVC(kernel=kernel, max_iter=1000, tol=1e-6)
+    # clf = SVC(kernel=kernel, max_iter=1000, tol=1e-9)
 
     # train svm
     s_time = timeit.default_timer()

@@ -11,9 +11,9 @@ def main():
     models_short = ['alexnet_p', 'alexnet_p_ww', 'alexnet_p_c', 'alexnet_p_c_ww']
     # models = ['alexnet']
     # features = ['fc6', 'fc7']
+    features = ['fc7']
     # kernels = ['linear', 'rbf']
-    kernels = ['linear']
-    features = ['fc6']
+    kernels = ['rbf']
     features_out = ['', '_fc6', '_fc7', '_fc6_linear', '_fc7_linear']
     mapp = {'75': '1267', '13': '1015', '24': '1261', '21': '1031', '64': '1010', '0': '1006'}
     # mapp = {'0': '1267'}   # for binary models, change depending on the used conceptID
