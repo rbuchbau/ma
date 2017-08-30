@@ -1,5 +1,0 @@
-Model Precis. Recall F-Meas.
-alexnet_p 0.4947 0.2700 0.3494
-alexnet_p_without_weights 0.4254 0.1876 0.2604
-alexnet_p_c 0.5252 0.2531 0.3416
-alexnet_p_c_without_weights 0.4871 0.2223 0.3053
